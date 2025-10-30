@@ -23,12 +23,12 @@ export default function Dashboard() {
     const { data: transactionCountData } = useTransactionCount({ address: address as `0x${string}` | undefined });
 
 
-    const [transactionCount, setTransactionCount] = useState(0);
-  const [weeklyChange, setWeeklyChange] = useState(0);
-  const [ethPrice, setEthPrice] = useState(0);
-  const [ethPriceChange, setEthPriceChange] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isPriceLoading, setIsPriceLoading] = useState(true);
+    const [, setTransactionCount] = useState(0);
+  const [, setWeeklyChange] = useState(0);
+  const [, setEthPrice] = useState(0);
+  const [, setEthPriceChange] = useState(0);
+  const [, setIsLoading] = useState(true);
+  const [, setIsPriceLoading] = useState(true);
 
     // Get the number of supported chains from the config
     // const supportedChains = config.chains.length;

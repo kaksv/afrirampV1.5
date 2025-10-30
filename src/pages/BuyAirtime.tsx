@@ -89,10 +89,10 @@ export default function BuyAirtime() {
   
   // Add useEffect to handle transaction success
   useEffect(() => {
-    if (currentTx?.id) {
+    if (currentTx ) {
       const intervalId = setInterval(async() => {
         try {
-          const response = await fetch(`https://afriramp-backend2.onrender.com/api/buyairtime/${currentTx.id}`);
+          const response = await fetch(`https://afriramp-backend2.onrender.com/api/buyairtime/${currentTx}`);
           if(!response.ok) {
             throw new Error('Failed to fetch transaction status');
           } 
