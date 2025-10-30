@@ -55,7 +55,7 @@ export default function OffRamp() {
   const [, setIsSuccess] = useState(false);
   const [, setErrorMessage] = useState('');
   const [, ] = useState('created');
-   const [currentTx, setCurrentTx] = useState<string | null>(null);
+   const [currentTx, setCurrentTx] = useState<any>(null);
 
   //  Rates use states
   const [exchangeRate, setExchangeRate] = useState<string | null>(null);

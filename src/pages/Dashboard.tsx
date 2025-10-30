@@ -1,15 +1,21 @@
 import { motion } from 'framer-motion';
 import { useAppKitAccount } from '@reown/appkit/react';
-import { usePublicClient, useConfig, useTransactionCount } from 'wagmi';
+import { usePublicClient,
+  //  useConfig, 
+   useTransactionCount } from 'wagmi';
 import { useEffect, useState } from 'react';
 import BalanceCard from '../components/BalanceCard';
 import TransactionHistory from '../components/TransactionHistory';
-import { ArrowRightLeft, Network, PieChart, BellRing } from 'lucide-react';
+import { 
+  // ArrowRightLeft, 
+  // Network, 
+  // PieChart, 
+  BellRing } from 'lucide-react';
 
 export default function Dashboard() {
     const { address, isConnected } = useAppKitAccount();
   const publicClient = usePublicClient();
-  const config = useConfig();
+  // const config = useConfig();
 
     // const { data: block } = useBlock();
 
@@ -25,7 +31,7 @@ export default function Dashboard() {
   const [isPriceLoading, setIsPriceLoading] = useState(true);
 
     // Get the number of supported chains from the config
-    const supportedChains = config.chains.length;
+    // const supportedChains = config.chains.length;
 
       // Fetch ETH price
   useEffect(() => {
@@ -92,35 +98,35 @@ export default function Dashboard() {
   }, [address, isConnected, publicClient, transactionCountData]);
 
     // Metrics data with real values
-  const metrics = [
-    { 
-      name: 'Total Transactions', 
-      value: isLoading ? '...' : transactionCount.toString(), 
-      change: weeklyChange > 0 ? `+${weeklyChange}` : weeklyChange.toString(), 
-      icon: <ArrowRightLeft size={18} />, 
-      color: 'primary',
-      isLoading
-    },
-    { 
-      // name: 'Supported Chains', 
-      name: 'Supported Tokens', 
-      // value: supportedChainsCount.toString(), 
-      value: 2, 
-      // change: 'Networks', 
-      change: 'Tokens', 
-      icon: <Network size={18} />, 
-      color: 'secondary',
-      isLoading: false
-    },
-    { 
-      name: 'ETH Price', 
-      value: isPriceLoading ? '...' : `$${ethPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}`,
-      change: isPriceLoading ? '...' : `${ethPriceChange > 0 ? '+' : ''}${ethPriceChange.toFixed(2)}%`,
-      icon: <PieChart size={18} />, 
-      color: 'accent',
-      isLoading: isPriceLoading
-    },
-  ];
+  // const metrics = [
+  //   { 
+  //     name: 'Total Transactions', 
+  //     value: isLoading ? '...' : transactionCount.toString(), 
+  //     change: weeklyChange > 0 ? `+${weeklyChange}` : weeklyChange.toString(), 
+  //     icon: <ArrowRightLeft size={18} />, 
+  //     color: 'primary',
+  //     isLoading
+  //   },
+  //   { 
+  //     // name: 'Supported Chains', 
+  //     name: 'Supported Tokens', 
+  //     // value: supportedChainsCount.toString(), 
+  //     value: 2, 
+  //     // change: 'Networks', 
+  //     change: 'Tokens', 
+  //     icon: <Network size={18} />, 
+  //     color: 'secondary',
+  //     isLoading: false
+  //   },
+  //   { 
+  //     name: 'ETH Price', 
+  //     value: isPriceLoading ? '...' : `$${ethPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}`,
+  //     change: isPriceLoading ? '...' : `${ethPriceChange > 0 ? '+' : ''}${ethPriceChange.toFixed(2)}%`,
+  //     icon: <PieChart size={18} />, 
+  //     color: 'accent',
+  //     isLoading: isPriceLoading
+  //   },
+  // ];
 
     return (
     <div className="space-y-8">

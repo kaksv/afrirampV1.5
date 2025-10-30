@@ -51,7 +51,7 @@ export default function BuyAirtime() {
   const [, setIsSuccess] = useState(false);
   const [, setErrorMessage] = useState('');
   const [, ] = useState('created');
-   const [currentTx, setCurrentTx] = useState<any>(null);
+   const [currentTx, setCurrentTx] = useState<unknown>(null);
 
   //  Rates use states
   const [exchangeRate, setExchangeRate] = useState<string | null>(null);
@@ -212,10 +212,10 @@ export default function BuyAirtime() {
   ];
   
   // Exchange rates (1 USD = X local currency)
-  const exchangeRates = {
-    KSH: 143.50, // 1 USD = 143.50 KSH
-    UGX: 3850.75, // 1 USD = 3850.75 UGX
-  };
+  // const exchangeRates = {
+  //   KSH: 143.50, // 1 USD = 143.50 KSH
+  //   UGX: 3850.75, // 1 USD = 3850.75 UGX
+  // };
   
   // Get payment methods based on currency
   const getPaymentMethods = () => {
@@ -239,25 +239,19 @@ export default function BuyAirtime() {
     return currency ? currency.symbol : 'USh';
   };
   
-  // Use percentage of available balance
-  const usePercentage = (percentage: number) => {
-    if (availableBalance > 0) {
-      const calculatedAmount = (availableBalance * percentage / 100).toFixed(2);
-      setAmount(calculatedAmount.replace(/\.?0+$/, ''));
-    }
-  };
+  
   
   // Calculate fiat amount based on token amount
-  const calculateFiatAmount = () => {
-    if (!amount || isNaN(parseFloat(amount))) return '0.00';
-    const token = tokens.find(t => t.symbol === selectedToken);
-    if (!token) return '0.00';
+  // const calculateFiatAmount = () => {
+  //   if (!amount || isNaN(parseFloat(amount))) return '0.00';
+  //   const token = tokens.find(t => t.symbol === selectedToken);
+  //   if (!token) return '0.00';
     
-    // Convert token amount to local currency
-    const usdAmount = parseFloat(amount) * token.price;
-    const localAmount = usdAmount * exchangeRates[fiatCurrency as keyof typeof exchangeRates];
-    return localAmount.toFixed(2);
-  };
+  //   // Convert token amount to local currency
+  //   const usdAmount = parseFloat(amount) * token.price;
+  //   const localAmount = usdAmount * exchangeRates[fiatCurrency as keyof typeof exchangeRates];
+  //   return localAmount.toFixed(2);
+  // };
 
     // Returns the final fiat amount user receives after both 2% deductions
 const getFinalReceiveAmount = () => {

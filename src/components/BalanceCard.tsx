@@ -81,7 +81,7 @@ export default function BalanceCard(){
     // Get Native Token Balance
     // Cast useAppKitBalance to any because the hook typings currently expect no arguments
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: balance, isLoading: isEthLoading, error: ethError } = (useAppKitBalance as any)();
+    const { data: balance, isLoading: isEthLoading } = (useAppKitBalance as any)();
 
     // Normalize chainId to a number and avoid indexing with undefined
     const chainIdNum = (chainId ?? 0) as number;
@@ -89,7 +89,7 @@ export default function BalanceCard(){
     // Get USDC/USDT/OFT balances if available on the current network
     // Cast useAppKitBalance to any because the hook typings currently expect no arguments
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: usdcBalance, isLoading: isUsdcLoading, error: usdcError } = (useAppKitBalance as any)({ 
+    const { data: usdcBalance, isLoading: isUsdcLoading } = (useAppKitBalance as any)({ 
         address, 
         token: chainIdNum ? TOKEN_ADDRESSES[chainId as keyof typeof TOKEN_ADDRESSES]?.USDC : undefined,
         formatUnits: 'mwei', // 6 decimals for USDC
@@ -97,7 +97,7 @@ export default function BalanceCard(){
     
     // Cast useAppKitBalance to any because the hook typings currently expect no arguments
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: usdtBalance, isLoading: isUsdtLoading, error: usdtError } = (useAppKitBalance as any)({ 
+    const { data: usdtBalance, isLoading: isUsdtLoading } = (useAppKitBalance as any)({ 
         address, 
         token: chainIdNum ? TOKEN_ADDRESSES[chainId as keyof typeof TOKEN_ADDRESSES]?.USDT : undefined,
         formatUnits: 'mwei', // 6 decimals for USDT
@@ -105,7 +105,7 @@ export default function BalanceCard(){
 
     // Cast useAppKitBalance to any because the hook typings currently expect no arguments
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: oftBalance, isLoading: isOftLoading, error: oftError } = (useAppKitBalance as any)({ 
+    const { data: oftBalance, isLoading: isOftLoading } = (useAppKitBalance as any)({ 
         address, 
         token: chainIdNum ? TOKEN_ADDRESSES[chainId as keyof typeof TOKEN_ADDRESSES]?.OFT : undefined,
         formatUnits: 'mwei', // 6 decimals for OFT

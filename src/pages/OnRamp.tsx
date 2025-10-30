@@ -26,7 +26,7 @@ export default function OnRamp() {
   const { address } = useAccount();
 
   // Image upload to cloudinary.
-  const [image, setImage] = useState<File | null>(null);
+  const [, setImage] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -50,35 +50,35 @@ export default function OnRamp() {
   const MAX_IMAGE_SIZE_MB = 10;
 
   // Handle image upload to Cloudinary
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setImage(file);
-      setLoading(true);
+  // const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   if (e.target.files && e.target.files[0]) {
+  //     const file = e.target.files[0];
+  //     setImage(file);
+  //     setLoading(true);
 
-      // Upload to Cloudinary
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+  //     // Upload to Cloudinary
+  //     const formData = new FormData();
+  //     formData.append("file", file);
+  //     formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
 
-      try {
-        const res = await fetch(
-          `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
-        const data = await res.json();
-        setImageUrl(data.secure_url);
-      } catch (error) {
-        alert("Image upload failed");
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
+  //     try {
+  //       const res = await fetch(
+  //         `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+  //         {
+  //           method: "POST",
+  //           body: formData,
+  //         }
+  //       );
+  //       const data = await res.json();
+  //       setImageUrl(data.secure_url);
+  //     } catch (error) {
+  //       alert("Image upload failed");
+  //       console.error(error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   }
+  // };
 
   // useEffect to handle the fetched EthPrice by coingecko.
   useEffect(() => {

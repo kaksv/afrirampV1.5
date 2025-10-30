@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import { motion } from 'framer-motion';
-import { ArrowUpRight, ArrowDownLeft, Filter, Search, ExternalLink, Loader2 } from 'lucide-react';
+import { ArrowUpRight, ArrowDownLeft, Filter, Search, ExternalLink,
+  //  Loader2 
+  } from 'lucide-react';
 
 // Transaction interface
 interface Transaction {
@@ -251,7 +253,7 @@ export default function History() {
             <div className="relative">
               <select
                 value={filter}
-                onChange={(e) => setFilter(e.target.value as any)}
+                onChange={(e) => setFilter(e.target.value as 'all' | 'send' | 'receive' | 'onramp' | 'offramp')}
                 className="input appearance-none pr-10 py-2 text-sm"
               >
                 <option value="all">All Types</option>

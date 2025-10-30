@@ -26,12 +26,12 @@ export default function Send() {
   
   // Wait for transaction receipt
   const { 
-    data: txReceipt, 
+    // data: txReceipt, 
     isLoading: isWaitingForReceipt,
     isSuccess: isTransactionSuccessful
   } = useWaitForTransactionReceipt({ 
     hash: txHash,
-    enabled: !!txHash,
+    // enabled: !!txHash,
   });
   
   // Available balance for sending

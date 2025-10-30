@@ -1,7 +1,9 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client';
 import { createAppKit } from '@reown/appkit/react';
-import { WagmiProvider, useAccount } from 'wagmi';
+import { WagmiProvider,
+  //  useAccount 
+  } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 

@@ -1,5 +1,7 @@
 import { motion } from 'framer-motion';
-import { Wallet, ArrowRight, Shield, BarChart4, Globe, Sparkle, ArrowRightLeft, Network, PieChart, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import { Wallet, ArrowRight, Shield, BarChart4, Globe,
+    //  Sparkle,
+      ArrowRightLeft, Network, PieChart, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 
 
 
