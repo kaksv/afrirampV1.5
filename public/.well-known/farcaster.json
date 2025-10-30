@@ -1,0 +1,25 @@
+{
+  "frame": {
+    "name": "AfriRamp",
+    "version": "1",
+    "iconUrl": "https://res.cloudinary.com/dagn33ye3/image/upload/v1755271377/5929490192702490631_mjnbaq.jpg",
+    "homeUrl": "https://afriramp.xyz",
+    "imageUrl": "https://res.cloudinary.com/dagn33ye3/image/upload/v1755263680/splash_crfe83.jpg",
+    "splashImageUrl": "https://res.cloudinary.com/dagn33ye3/image/upload/v1755263680/splash_crfe83.jpg",
+    "splashBackgroundColor": "#f1f1f1",
+    "webhookUrl": "https://afriramp.xyz/api/webhook",
+    "subtitle": "Receive mobile money swiftly.",
+    "description": "Receive mobile money from your crypto swiftly.",
+    "primaryCategory": "developer-tools"
+  },
+  "accountAssociation": {
+    "header": "eyJmaWQiOjgxMzMyMywidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweGVBOWY1MzM2MTg2NjdkMzY0RjdlMTc1NzA4QTg2MzY5Rjk4NzdFNzAifQ",
+    "payload": "eyJkb21haW4iOiJhZnJpcmFtcC54eXoifQ",
+    "signature": "MHhlNDViMGE2NTFlOTk3NTU5NmJjMmNlOTRmM2M1ODUxMDQ2MWIxNmRlNDdjNzYzYzQ5NTE1OGIwYTYwY2U3NzJiNjk0ZGE0ODEyY2FjOTg3NzMzNjcyN2QyYzcxOTcxOTIyOWI2NDU1NjFmMzYzYzA0NzhhYzcwNzkzNGM1NTJmZjFi"
+  },
+  
+  "baseBuilder": {
+    "allowedAddresses": ["0x242d770Bde0d3841AF75155936Eee7C309c2d158"]
+  }
+
+}

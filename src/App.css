@@ -1,0 +1,464 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply antialiased;
+  }
+  
+  body {
+    @apply bg-slate-50 dark:bg-dark-800 text-slate-900 dark:text-slate-50 min-h-screen;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .btn-primary {
+    @apply bg-primary-600 hover:bg-primary-700 text-white focus:ring-primary-500;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary-500 hover:bg-secondary-600 text-white focus:ring-secondary-400;
+  }
+  
+  .btn-accent {
+    @apply bg-accent-500 hover:bg-accent-600 text-white focus:ring-accent-400;
+  }
+  
+  .btn-outline {
+    @apply border border-slate-300 dark:border-dark-400 hover:bg-slate-100 dark:hover:bg-dark-600 focus:ring-slate-200 dark:focus:ring-dark-500;
+  }
+  
+  .card {
+    @apply bg-white dark:bg-dark-700 rounded-xl shadow-sm border border-slate-200 dark:border-dark-600 p-6;
+  }
+  
+  .gradient-text {
+    @apply text-transparent bg-clip-text bg-gradient-to-r from-primary-500 to-accent-500;
+  }
+  
+  .input {
+    @apply w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-dark-500 bg-white dark:bg-dark-600 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200;
+  }
+}
+
+@layer utilities {
+  .transition-gpu {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+  
+  .dashboard-preview {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .connect-wallet-glow {
+    box-shadow: 0 0 50px rgba(59, 130, 246, 0.3);
+  }
+  
+  .polymorphic-gradient {
+    background: linear-gradient(
+      135deg,
+      rgba(99, 102, 241, 0.15) 0%,
+      rgba(147, 51, 234, 0.12) 25%,
+      rgba(236, 72, 153, 0.08) 50%,
+      rgba(59, 130, 246, 0.1) 75%,
+      rgba(20, 184, 166, 0.12) 100%
+    );
+    background-size: 400% 400%;
+    animation: gradient-shift 8s ease-in-out infinite;
+  }
+  
+  .glass-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  
+  .glass-card-dark {
+    background: rgba(45, 47, 102, 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  
+  .glass-button {
+    background: rgba(99, 102, 241, 0.2);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    box-shadow: 
+      0 4px 16px rgba(99, 102, 241, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .glass-button:hover {
+    background: rgba(99, 102, 241, 0.3);
+    border: 1px solid rgba(99, 102, 241, 0.4);
+    box-shadow: 
+      0 8px 24px rgba(99, 102, 241, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+  }
+  
+  .glass-navbar {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.05);
+  }
+  
+  .glass-navbar-dark {
+    background: rgba(29, 30, 48, 0.8);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2);
+  }
+  
+  .glass-hero {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 
+      0 16px 64px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+  }
+  
+  .glass-footer {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .glass-footer-dark {
+    background: rgba(43, 44, 61, 0.9);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .glass-feature-card {
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 
+      0 6px 24px rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .glass-feature-card:hover {
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 
+      0 12px 32px rgba(0, 0, 0, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    transform: translateY(-4px);
+  }
+  
+  .glass-overlay {
+    background: rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  
+  .glass-button-container {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .glass-button-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.2),
+      transparent
+    );
+    transition: left 0.5s;
+  }
+  
+  .glass-button-container:hover::before {
+    left: 100%;
+  }
+  
+  .connect-button-wrapper {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+  }
+  
+  /* Enhanced ConnectKit button styling */
+  .connect-button-wrapper button {
+    background: transparent !important;
+    border: none !important;
+    font-size: 1rem !important;
+    font-weight: 500 !important;
+    color: inherit !important;
+    padding: 10px 20px !important;
+    border-radius: 8px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    min-width: 150px !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+  
+  .connect-button-wrapper button:hover {
+    background: rgba(99, 102, 241, 0.1) !important;
+    color: rgb(99, 102, 241) !important;
+    transform: translateY(-1px) !important;
+  }
+  
+  /* Floating Header Styles */
+  .glass-logo-container {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .glass-logo-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.15),
+      transparent
+    );
+    transition: left 0.6s;
+  }
+  
+  .glass-logo-container:hover::before {
+    left: 100%;
+  }
+  
+  .glass-header-button {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .glass-header-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    transition: left 0.5s;
+  }
+  
+  .glass-header-button:hover::before {
+    left: 100%;
+  }
+  
+  /* Enhanced header button styling */
+  .glass-header-button button {
+    background: transparent !important;
+    border: none !important;
+    color: white !important;
+    font-weight: 500 !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+    transition: all 0.3s ease !important;
+  }
+  
+  .glass-header-button button:hover {
+    color: rgb(99, 102, 241) !important;
+    text-shadow: 0 0 8px rgba(99, 102, 241, 0.3) !important;
+    transform: translateY(1px) !important;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-10px) rotate(1deg);
+  }
+  50% {
+    transform: translateY(-5px) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-15px) rotate(-1deg);
+  }
+}
+
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Add to your index.css */
+@media (max-width: 768px) {
+  w3m-modal {
+    --w3m-modal-max-width: 100% !important;
+    --w3m-modal-min-width: 100% !important;
+    --w3m-modal-border-radius: 0 !important;
+  }
+  
+  .w3m-modal {
+    max-height: 100vh !important;
+    height: 100% !important;
+  }
+  
+  .w3m-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+/* @tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+} */
+
+/* * */
+/* 
+{
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  html {
+    color-scheme: dark;
+  }
+}
+
+section {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  background-color: #f9f9f9;
+  padding: 13px;
+  margin: 10px;
+  width: 90%;
+  text-align: left;
+}
+
+.pages {
+  align-items: center;
+  justify-items: center;
+  text-align: center;
+}
+
+button {
+  padding: 10px 15px;
+  background-color: white;
+  color: black;
+  border: 2px solid black;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 15px; /* Space between buttons */
+/*} 
+
+button:hover {
+  background-color: black;
+    color: white;
+}
+
+button:active {
+  background-color: #333; /* Dark gray on click */
+/*    color: white;
+}
+
+h1 {
+  margin: 20px;
+}
+
+pre {
+  white-space: pre-wrap; /* Wrap text */
+/*  word-wrap: break-word; /* Break long words */
+/*  word-break: break-all;
+}
+
+
+.link-button {
+  background-color: black;
+  color: white;
+  padding: 5px 10px;
+  text-decoration: none;
+  border-radius: 5px;
+}
+
+.link-button:hover {
+  background-color: #333;  /* Darken the background on hover */
+/*}
+
+.link-button:hover {
+  background-color: white;  /* Change background to white on hover */
+/*  color: black;  /* Change text color to black on hover */
+/*}
+
+.advice {
+  text-align: 'center';
+   margin-bottom: 10px;
+   line-height: 25px;
+} */
