@@ -1,9 +1,8 @@
-import { useAppKitAccount, useAppKitBalance, useAppKitNetwork } from "@reown/appkit/react";
-import {  formatUnits } from "viem";
+import { useAccount, useBalance, useChainId } from 'wagmi';
+import { formatEther, formatUnits } from 'viem';
 import { ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-
 
 // Token addresses for different networks
 type TokenAddresses = Record<number, { USDC?: string; USDT?: string; OFT?: string }>;
@@ -53,88 +52,136 @@ const TOKEN_ADDRESSES: TokenAddresses = {
 };
 
 // ERC20 ABI for token balance queries
-// const ERC20_ABI = [
-//   {
-//     constant: true,
-//     inputs: [{ name: '_owner', type: 'address' }],
-//     name: 'balanceOf',
-//     outputs: [{ name: 'balance', type: 'uint256' }],
-//     type: 'function'
-//   },
-//   {
-//     constant: true,
-//     inputs: [],
-//     name: 'decimals',
-//     outputs: [{ name: '', type: 'uint8' }],
-//     type: 'function'
-//   }
-// ] as const;
+const ERC20_ABI = [
+  {
+    constant: true,
+    inputs: [{ name: '_owner', type: 'address' }],
+    name: 'balanceOf',
+    outputs: [{ name: 'balance', type: 'uint256' }],
+    type: 'function'
+  },
+  {
+    constant: true,
+    inputs: [],
+    name: 'decimals',
+    outputs: [{ name: '', type: 'uint8' }],
+    type: 'function'
+  }
+] as const;
 
-export default function BalanceCard(){
-    const { address, 
-        // caipAddress, 
-        // isConnected, 
-        // status, 
-        // embeddedWalletInfo
-     } = useAppKitAccount();
-    const chainId = useAppKitNetwork().chainId;
-    // Get Native Token Balance
-    // Cast useAppKitBalance to any because the hook typings currently expect no arguments
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: balance, isLoading: isEthLoading } = (useAppKitBalance as any)();
+export default function BalanceCard() {
+  const { address } = useAccount();
+  const chainId = useChainId();
+  
+  // Get ETH balance
+  const { data: ethBalance, isLoading: isEthLoading } = useBalance({
+    address,
+  });
+  
+  // Get USDC balance if available on the current network
+  const { data: usdcBalance, isLoading: isUsdcLoading } = useBalance({
+    address,
+    token: chainId ? TOKEN_ADDRESSES[chainId as keyof typeof TOKEN_ADDRESSES]?.USDC : undefined,
+    formatUnits: 'mwei', // 6 decimals for USDC
+  });
+  
+  // Get USDT balance if available on the current network
+  const { data: usdtBalance, isLoading: isUsdtLoading } = useBalance({
+    address,
+    token: chainId ? TOKEN_ADDRESSES[chainId as keyof typeof TOKEN_ADDRESSES]?.USDT : undefined,
+    formatUnits: 'mwei', // 6 decimals for USDT
+  });
 
-    // Normalize chainId to a number and avoid indexing with undefined
-    const chainIdNum = (chainId ?? 0) as number;
-
-    // Get USDC/USDT/OFT balances if available on the current network
-    // Cast useAppKitBalance to any because the hook typings currently expect no arguments
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: usdcBalance, isLoading: isUsdcLoading } = (useAppKitBalance as any)({ 
-        address, 
-        token: chainIdNum ? TOKEN_ADDRESSES[chainId as keyof typeof TOKEN_ADDRESSES]?.USDC : undefined,
-        formatUnits: 'mwei', // 6 decimals for USDC
-    });
-    
-    // Cast useAppKitBalance to any because the hook typings currently expect no arguments
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: usdtBalance, isLoading: isUsdtLoading } = (useAppKitBalance as any)({ 
-        address, 
-        token: chainIdNum ? TOKEN_ADDRESSES[chainId as keyof typeof TOKEN_ADDRESSES]?.USDT : undefined,
-        formatUnits: 'mwei', // 6 decimals for USDT
-    });
-
-    // Cast useAppKitBalance to any because the hook typings currently expect no arguments
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: oftBalance, isLoading: isOftLoading } = (useAppKitBalance as any)({ 
-        address, 
-        token: chainIdNum ? TOKEN_ADDRESSES[chainId as keyof typeof TOKEN_ADDRESSES]?.OFT : undefined,
-        formatUnits: 'mwei', // 6 decimals for OFT
-    });
-
-      const formatBalance = (balance: bigint | undefined, decimals: number = 18) => {
+   // Get USDT balance if available on the current network
+  const { data: oftBalance, isLoading: isOftLoading } = useBalance({
+    address,
+    token: chainId ? TOKEN_ADDRESSES[chainId as keyof typeof TOKEN_ADDRESSES]?.OFT : undefined,
+    formatUnits: 'mwei', // 6 decimals for USDT
+  });
+  
+  const formatBalance = (balance: bigint | undefined, decimals: number = 18) => {
     if (!balance) return '0.00';
     return parseFloat(formatUnits(balance, decimals)).toFixed(decimals === 18 ? 4 : 2);
   };
   
   const isTokenSupported = (token: 'USDC' | 'USDT' | 'OFT') => {
-    return chainIdNum && TOKEN_ADDRESSES[chainIdNum as keyof typeof TOKEN_ADDRESSES]?.[token];
+    return chainId && TOKEN_ADDRESSES[chainId as keyof typeof TOKEN_ADDRESSES]?.[token];
   };
-
-
+  
   return (
     <div className="card overflow-hidden">
       <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-primary-500 to-accent-500" />
       
       <h2 className="text-lg font-semibold mb-6">Your Balance</h2>
       
-      {isEthLoading || isUsdcLoading || isUsdtLoading || isOftLoading ? (
+      {isEthLoading || isUsdcLoading || isUsdtLoading ? (
         <div className="flex flex-col items-center py-6">
           <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mb-4"></div>
           <p className="text-slate-500 dark:text-slate-400">Loading balances...</p>
         </div>
       ) : (
         <>
-          {/* Balance Section */}
+{/* <<<<<<< HEAD
+
+          
+
+          
+          <div className="mt-6 grid grid-cols-2 gap-4">
+            <Link 
+              to="/onramp" 
+              className="flex flex-col items-center p-3 rounded-lg border border-slate-700 dark:border-white hover:bg-slate-50 dark:hover:bg-dark-600 transition-colors"
+            >
+              <motion.div 
+                whileHover={{ scale: 1.1 }}
+                className="w-10 h-10 rounded-full bg-success-100 dark:bg-success-900/20 text-success-600 dark:text-success-400 flex items-center justify-center mb-2"
+              >
+                <span className="text-lg">💵</span>
+              </motion.div>
+              <span className="text-sm font-medium">Buy Stable Coins</span>
+            </Link>
+            <Link 
+              to="/offramp" 
+              className="flex flex-col items-center p-3 rounded-lg border border-slate-700 dark:border-white hover:bg-slate-50 dark:hover:bg-dark-600 transition-colors"
+            >
+              <motion.div 
+                whileHover={{ scale: 1.1 }}
+                className="w-10 h-10 rounded-full bg-warning-100 dark:bg-warning-900/20 text-warning-600 dark:text-warning-400 flex items-center justify-center mb-2"
+              >
+                <span className="text-lg">💰</span>
+              </motion.div>
+              <span className="text-sm font-medium">Sell StableCoins</span>
+            </Link>
+            <Link 
+              to="/buyairtime" 
+              className="flex flex-col items-center p-3 rounded-lg border border-slate-700 dark:border-white hover:bg-slate-50 dark:hover:bg-dark-600 transition-colors"
+            >
+              <motion.div 
+                whileHover={{ scale: 1.1 }}
+                className="w-10 h-10 rounded-full bg-warning-100 dark:bg-warning-900/20 text-warning-600 dark:text-warning-400 flex items-center justify-center mb-2"
+              >
+                <span className="text-lg">📱</span>
+              </motion.div>
+              <span className="text-sm font-medium">Airtime</span>
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 gap-4 my-4">
+            <Link 
+              to="/send" 
+              className="btn btn-primary flex items-center justify-center"
+            >
+              <ArrowUpRight size={18} className="mr-2" />
+              Send
+            </Link>
+            <Link 
+              to="/receive" 
+              className="btn btn-outline flex items-center justify-center"
+            >
+              <ArrowDownLeft size={18} className="mr-2" />
+              Receive
+            </Link>
+          </div>
+=======
+>>>>>>> airtime */}
           <div className="space-y-4 mb-6">
             {/* ETH Balance */}
             <div className="p-4 rounded-lg bg-slate-50 dark:bg-dark-600">
@@ -144,11 +191,11 @@ export default function BalanceCard(){
                     <span className="text-lg">Ξ</span>
                   </div>
                   <div>
-                    <p className="font-medium">{chainIdNum === 8453 ? 'ETH' : chainIdNum === 42220 ? 'CELO' : chainIdNum === 14 ? 'FLR' : 'ETH'}</p>
+                    <p className="font-medium">{chainId === 8453 ? 'ETH' : chainId === 42220 ? 'CELO' : chainId === 14 ? 'FLR' : 'ETH'}</p>
                     {/* <p className="text-sm text-slate-500 dark:text-slate-400">{formatBalance(ethBalance?.value)}</p> */}
                   </div>
                 </div>
-                <p className="text-xl font-bold">{formatBalance(balance ?.value)}</p>
+                <p className="text-xl font-bold">{formatBalance(ethBalance?.value)}</p>
               </div>
             </div>
             
@@ -197,7 +244,7 @@ export default function BalanceCard(){
                       <span className="text-lg">₮0</span>
                     </div>
                     <div>
-                      <p className="font-medium">OFT Token</p>
+                      <p className="font-medium">Omnichain Fungible Token</p>
                       <p className="text-sm text-slate-500 dark:text-slate-400">OFT</p>
                     </div>
                   </div>
@@ -266,5 +313,4 @@ export default function BalanceCard(){
       )}
     </div>
   );
-
 }

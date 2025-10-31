@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { useAppKitAccount } from '@reown/appkit/react';
 import { usePublicClient,
   //  useConfig, 
-   useTransactionCount } from 'wagmi';
+useTransactionCount } from 'wagmi';
 import { useEffect, useState } from 'react';
 import BalanceCard from '../components/BalanceCard';
 import TransactionHistory from '../components/TransactionHistory';
@@ -23,7 +23,7 @@ export default function Dashboard() {
     const { data: transactionCountData } = useTransactionCount({ address: address as `0x${string}` | undefined });
 
 
-    const [, setTransactionCount] = useState(0);
+  const [, setTransactionCount] = useState(0);
   const [, setWeeklyChange] = useState(0);
   const [, setEthPrice] = useState(0);
   const [, setEthPriceChange] = useState(0);
@@ -33,7 +33,7 @@ export default function Dashboard() {
     // Get the number of supported chains from the config
     // const supportedChains = config.chains.length;
 
-      // Fetch ETH price
+  // Fetch ETH price
   useEffect(() => {
     const fetchEthPrice = async () => {
       try {
