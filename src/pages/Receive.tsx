@@ -35,7 +35,7 @@ export default function Receive() {
         transition={{ duration: 0.3 }}
         className="card"
       >
-        <h2 className="text-xl font-semibold mb-6">Receive Sonic</h2>
+        <h2 className="text-xl font-semibold mb-6">Receive Eth</h2>
         
         <div className="flex flex-col items-center mb-6">
           <p className="text-slate-600 dark:text-slate-300 mb-6">

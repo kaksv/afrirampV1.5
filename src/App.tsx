@@ -14,6 +14,7 @@ import OffRamp from './pages/OffRamp';
 // import History from './pages/History';
 import Welcome from './pages/Welcome';
 import BuyAirtime from './pages/BuyAirtime';
+import EthTransact from './pages/EthTransact';
 
 import "./App.css"
 
@@ -81,6 +82,11 @@ export function App() {
         <Route path="buyairtime" element={  
           <ProtectedRoute>
             <BuyAirtime />
+          </ProtectedRoute>
+        } />
+        <Route path="eth" element={  
+          <ProtectedRoute>
+            <EthTransact />
           </ProtectedRoute>
         } />
       </Route>
