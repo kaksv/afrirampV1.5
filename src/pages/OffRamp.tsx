@@ -511,72 +511,85 @@ const handleSell = async () => {
 
   setIsSubmitting(true);
 
+  // ✅ Step 1: Send "pending" transaction to backend BEFORE on-chain call
+  let backendTxId: string | null = null;
+  try {
+    const pendingResponse = await fetch('https://afriramp-backend2.onrender.com/api/offramp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tx_hash: null, // placeholder
+        amount: parseFloat(amount),
+        token: selectedToken,
+        fiat_amount: getFinalReceiveAmount(),
+        fiat_currency: fiatCurrency,
+        payout_method: payoutMethod,
+        mobile_number: mobileNumber,
+        sender_address: address,
+        recipient_address: RECIPIENT_ADDRESS,
+        chain_id: chainId,
+        sender_email: email,
+        status: 'pending',
+      }),
+    });
+    const pendingData = await pendingResponse.json();
+    backendTxId = pendingData.id; // assuming your backend returns an ID
+  } catch (err) {
+    console.error('Failed to register pending transaction');
+    // Optionally alert user
+  }
+
   try {
     const amountNum = parseFloat(amount);
     const token = selectedToken;
 
-    // Handle native token (ETH or FLR)
+    let hash: string | void;
+
     if (token === 'ETH' || token === 'FLR') {
-      // Native transfer: send ETH/FLR directly
-      const value = parseEther(amount); // 18 decimals
-      const hash  = await sendTransactionAsync({
-        to: RECIPIENT_ADDRESS,
-        value,
-        // gas: 21000n, // wagmi estimates automatically
+      const value = parseEther(amount);
+      hash = await sendTransactionAsync({ to: RECIPIENT_ADDRESS, value });
+    } else {
+      const tokenConfig = TOKEN_ADDRESSES[chainId];
+      const tokenAddress = tokenConfig?.[token as keyof typeof tokenConfig];
+      if (!tokenAddress) throw new Error(`Token ${token} not supported`);
+      
+      const decimals = getTokenDecimals(token);
+      const amountInWei = parseUnits(amount, decimals);
+      
+      hash = await writeContract({
+        address: tokenAddress,
+        abi: erc20Abi,
+        functionName: 'transfer',
+        args: [RECIPIENT_ADDRESS, amountInWei],
       });
-
-      setTxHash(hash);
-      await sendToBackend(hash, amountNum);
-      return;
     }
 
-    // Handle ERC20 tokens (USDC, USDT, OFT)
-    // Handle ERC20 tokens (USDC, USDT, OFT)
-    const tokenConfig = TOKEN_ADDRESSES[chainId];
-    const tokenAddress = tokenConfig?.[token as keyof typeof tokenConfig];
+    setTxHash(hash as string);
 
-    if (!tokenAddress) {
-      throw new Error(`Token ${token} not supported on chain ${chainId}`);
+    // ✅ Step 2: Update backend with real tx hash
+    if (backendTxId) {
+      await fetch(`https://afriramp-backend2.onrender.com/api/offramp/${backendTxId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tx_hash: hash, status: 'confirmed' }),
+      });
+    } else {
+      // Fallback: send full data now (less reliable on mobile)
+      await sendToBackend(hash as string, amountNum);
     }
 
-    const decimals = getTokenDecimals(token); // 6 for USDC/USDT/OFT
-    const amountInWei = parseUnits(amount, decimals); // Use viem's helper
-
-    // Use wagmi's writeContract (may not return a hash directly); await it and
-    // rely on useWriteContract's writeData / isWriteSuccess handled in the effect above.
-    // ✅ This returns the tx hash directly in wagmi v2
-    const hash = await writeContract({
-      address: tokenAddress,
-      abi: erc20Abi,
-      functionName: 'transfer',
-      args: [RECIPIENT_ADDRESS, amountInWei],
-    });
-
-    if(hash !== undefined){
-          setTxHash(hash);
-          await sendToBackend(hash, amountNum);
-    }else {
-      console.error(Error);
-      throw new Error('Transaction failed. Please try again.');
-    }
-
-
-
-    // writeData/isWriteSuccess will update and trigger the effect to set txHash and notify backend
-    return;
   } catch (err: unknown) {
     console.error('Transaction Error:', err);
-    setIsSubmitting(false);
-
-    let message = 'Transaction failed. Please try again.';
-    if (err instanceof Error) {
-      if (err.message.includes('User rejected')) {
-        message = 'You canceled the transaction.';
-      } else if (err.message.includes('insufficient funds')) {
-        message = 'Insufficient funds. Please top up your wallet.';
-      }
+    // Update backend status to 'failed' if backendTxId exists
+    if (backendTxId) {
+      fetch(`https://afriramp-backend2.onrender.com/api/offramp/${backendTxId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'failed' }),
+      }).catch(() => {});
     }
-    alert(message);
+    setIsSubmitting(false);
+    // ... alert logic
   }
 };
 
