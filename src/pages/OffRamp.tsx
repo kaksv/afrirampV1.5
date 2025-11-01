@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAccount, useChainId, useWriteContract, useBalance, useSendTransaction  } from 'wagmi';
+import { useAccount, useChainId, useWriteContract, useBalance, useSendTransaction, useWalletClient  } from 'wagmi';
 import { formatUnits, erc20Abi, parseEther, parseUnits } from 'viem';
 import { motion } from 'framer-motion';
 import { Phone, Smartphone, ArrowRight, ChevronDown, Loader2, CheckCircle2, } from 'lucide-react';
@@ -104,6 +104,7 @@ const availableTokens = getAvailableTokens(chainId);
 
 
   const { writeContract, isSuccess: isWriteSuccess, data: writeData } = useWriteContract();
+  const { data: walletClient } = useWalletClient();
 
 // Fiat currencies
 const fiatCurrencies = [
@@ -511,15 +512,47 @@ const handleSell = async () => {
 
   setIsSubmitting(true);
 
-  // ✅ Step 1: Send "pending" transaction to backend BEFORE on-chain call
-  let backendTxId: string | null = null;
   try {
-    const pendingResponse = await fetch('https://afriramp-backend2.onrender.com/api/offramp', {
+    const amountNum = parseFloat(amount);
+    const token = selectedToken;
+
+    // let hash: string;
+
+    if (token === 'ETH' || token === 'FLR') {
+      const value = parseEther(amount);
+      const hash = await sendTransactionAsync({ to: RECIPIENT_ADDRESS, value });
+      setTxHash(hash);
+      await sendToBackend(hash, amountNum);
+    } else {
+      // ERC20
+      if (!walletClient) throw new Error('Wallet not connected');
+      const tokenConfig = TOKEN_ADDRESSES[chainId];
+      const tokenAddress = tokenConfig?.[token as keyof typeof tokenConfig];
+      if (!tokenAddress) throw new Error(`Token ${token} not supported`);
+
+      const decimals = getTokenDecimals(token);
+      const amountInWei = parseUnits(amount, decimals);
+
+      const hash = await walletClient.writeContract({
+        address: tokenAddress,
+        abi: erc20Abi,
+        functionName: 'transfer',
+        args: [RECIPIENT_ADDRESS, amountInWei],
+      });
+
+      setTxHash(hash);
+      await sendToBackend(hash, amountNum);
+
+    }
+
+
+    // ✅ Now safely send to backend
+    const response = await fetch('https://afriramp-backend2.onrender.com/api/offramp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        tx_hash: null, // placeholder
-        amount: parseFloat(amount),
+        tx_hash: txHash, // ✅ guaranteed to be a string
+        amount: amountNum,
         token: selectedToken,
         fiat_amount: getFinalReceiveAmount(),
         fiat_currency: fiatCurrency,
@@ -529,65 +562,17 @@ const handleSell = async () => {
         recipient_address: RECIPIENT_ADDRESS,
         chain_id: chainId,
         sender_email: email,
-        status: 'pending',
       }),
     });
-    const pendingData = await pendingResponse.json();
-    backendTxId = pendingData.id; // assuming your backend returns an ID
-  } catch (err) {
-    console.error('Failed to register pending transaction');
-    // Optionally alert user
-  }
 
-  try {
-    const amountNum = parseFloat(amount);
-    const token = selectedToken;
-
-    let hash: string | void;
-
-    if (token === 'ETH' || token === 'FLR') {
-      const value = parseEther(amount);
-      hash = await sendTransactionAsync({ to: RECIPIENT_ADDRESS, value });
-    } else {
-      const tokenConfig = TOKEN_ADDRESSES[chainId];
-      const tokenAddress = tokenConfig?.[token as keyof typeof tokenConfig];
-      if (!tokenAddress) throw new Error(`Token ${token} not supported`);
-      
-      const decimals = getTokenDecimals(token);
-      const amountInWei = parseUnits(amount, decimals);
-      
-      hash = await writeContract({
-        address: tokenAddress,
-        abi: erc20Abi,
-        functionName: 'transfer',
-        args: [RECIPIENT_ADDRESS, amountInWei],
-      });
-    }
-
-    setTxHash(hash as string);
-
-    // ✅ Step 2: Update backend with real tx hash
-    if (backendTxId) {
-      await fetch(`https://afriramp-backend2.onrender.com/api/offramp/${backendTxId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tx_hash: hash, status: 'confirmed' }),
-      });
-    } else {
-      // Fallback: send full data now (less reliable on mobile)
-      await sendToBackend(hash as string, amountNum);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Backend error:', errorText);
+      alert('Transaction succeeded on-chain, but we failed to register it. Please contact support with your transaction hash.');
     }
 
   } catch (err: unknown) {
     console.error('Transaction Error:', err);
-    // Update backend status to 'failed' if backendTxId exists
-    if (backendTxId) {
-      fetch(`https://afriramp-backend2.onrender.com/api/offramp/${backendTxId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'failed' }),
-      }).catch(() => {});
-    }
     setIsSubmitting(false);
     // ... alert logic
   }
