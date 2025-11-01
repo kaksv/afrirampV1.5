@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAccount, useChainId, useWriteContract, useBalance,  } from 'wagmi';
+import { useAccount, useChainId, useWriteContract, useBalance, useSendTransaction  } from 'wagmi';
 import { formatUnits, erc20Abi, parseEther, parseUnits } from 'viem';
 import { motion } from 'framer-motion';
 import { Phone, Smartphone, ArrowRight, ChevronDown, Loader2, CheckCircle2, } from 'lucide-react';
@@ -57,6 +57,7 @@ type TokenSymbol = 'ETH' | 'USDC' | 'USDT' | 'OFT' | 'FLR';
 export default function OffRamp() {
   const { address } = useAccount();
   const chainId = useChainId();
+  const { sendTransactionAsync } = useSendTransaction();
   console.log(chainId);
 // Define which tokens (including native) are supported per chain
 const TOKEN_CONFIG: Record<number, TokenSymbol[]> = {
@@ -126,11 +127,46 @@ const fiatCurrencies = [
   },
 ];
 
+// Token prices in USD
+const [tokenPrices, setTokenPrices] = useState<Record<TokenSymbol, number>>({
+  ETH: 0,
+  FLR: 0,
+  USDC: 1,
+  USDT: 1,
+  OFT: 1,
+});
+
 // Helper to get API code
 const getApiCurrencyCode = (uiCode: string): string => {
   const currency = fiatCurrencies.find(c => c.uiCode === uiCode);
   return currency ? currency.apiCode : uiCode; // fallback
 };
+
+// Fetch token prices on mount and refresh every 60s
+useEffect(() => {
+  const fetchPrices = async () => {
+    try {
+      // Fetch ETH and FLR prices from CoinGecko
+      const response = await fetch(
+        'https://api.coingecko.com/api/v3/simple/price?ids=ethereum,flare&vs_currencies=usd'
+      );
+      const data = await response.json();
+
+      setTokenPrices(prev => ({
+        ...prev,
+        ETH: data.ethereum?.usd ?? prev.ETH,
+        FLR: data.flare?.usd ?? prev.FLR,
+      }));
+    } catch (err) {
+      console.warn('Failed to fetch token prices');
+    }
+  };
+
+  fetchPrices();
+  const interval = setInterval(fetchPrices, 60_000); // refresh every minute
+  return () => clearInterval(interval);
+}, []);
+
   // Reset selection when chain changes
 useEffect(() => {
   const tokens = getAvailableTokens(chainId);
@@ -324,15 +360,6 @@ const formatBalance = (balance: bigint | undefined, token: TokenSymbol): string 
 
   const availableBalanceNum = getAvailableBalanceNumber();
 
-
-  
-  // Exchange rates (1 USD = X local currency)
-  const exchangeRates = {
-    // KSH: 143.50, // 1 USD = 143.50 KSH
-    KSH: `${exchangeRate}`, // 1 USD = 143.50 KSH
-    UGX: `${exchangeRate}`, // 1 USD = 3850.75 UGX
-    RWF: `${exchangeRate}`, // 1 USD = 143.50 KSH
-  };
   
   // Get payment methods based on currency
   const getPaymentMethods = (currency: string) => {
@@ -373,31 +400,33 @@ const applyPercentage = (percentage: number) => {
     const num = parseFloat(amount);
     return !isNaN(num) && num > 0 && num <= availableBalanceNum;
   };
+
   // Calculate fiat amount based on token amount
-    const calculateFiatAmount = () => {
-      if (!amount || isNaN(parseFloat(amount))) return '0.00';
-      const token = tokens.find(t => t.symbol === selectedToken);
-      if (!token) return '0.00';
-      
-      // Convert token amount to local currency
-      const usdAmount = parseFloat(amount) * token.price;
-      const rate = Number(exchangeRates[fiatCurrency as keyof typeof exchangeRates]) || 0;
-      const localAmount = usdAmount * rate;
-      return localAmount.toFixed(2);
-    };
+const calculateFiatAmount = () => {
+  if (!amount || isNaN(parseFloat(amount)) || !exchangeRate) return '0.00';
+  
+  const amountNum = parseFloat(amount);
+  const tokenPriceUSD = tokenPrices[selectedToken] || 1; // fallback to $1
+  const usdValue = amountNum * tokenPriceUSD;
+  const localValue = usdValue * parseFloat(exchangeRate);
+  
+  return localValue.toFixed(2);
+};
 
   // Returns the final fiat amount user receives after both 2% deductions
 const getFinalReceiveAmount = () => {
   if (!amount || isNaN(parseFloat(amount)) || !exchangeRate) return 0;
 
-  const numAmount = parseFloat(amount);
-  const numRate = parseFloat(exchangeRate);
-  
-  // Apply first 2% (volatility buffer) → * 0.98
-  // Apply second 2% (profit margin) → * 0.98 again
-  const finalAmount = numRate * numAmount * 0.98 * 0.98;
+  const amountNum = parseFloat(amount);
+  const tokenPriceUSD = tokenPrices[selectedToken] || 1; // ← critical!
+  const usdValue = amountNum * tokenPriceUSD;            // ← true USD value
+  const localRate = parseFloat(exchangeRate);
 
-  return finalAmount;
+  // Apply fees on USD value, then convert to local currency
+  const usdAfterFees = usdValue * 0.98 * 0.98;
+  const finalLocalAmount = usdAfterFees * localRate;
+
+  return finalLocalAmount;
 };
   
   // Validate mobile number format
@@ -490,14 +519,10 @@ const handleSell = async () => {
     if (token === 'ETH' || token === 'FLR') {
       // Native transfer: send ETH/FLR directly
       const value = parseEther(amount); // 18 decimals
-      const { hash } = await window.ethereum.request({
-        method: 'eth_sendTransaction',
-        params: [{
-          from: address,
-          to: RECIPIENT_ADDRESS,
-          value: `0x${value.toString(16)}`,
-          gas: '0x5208', // 21000 gas minimum
-        }],
+      const hash  = await sendTransactionAsync({
+        to: RECIPIENT_ADDRESS,
+        value,
+        // gas: 21000n, // wagmi estimates automatically
       });
 
       setTxHash(hash);
@@ -658,13 +683,13 @@ const handleSell = async () => {
 
               <div>
                 <p className="font-medium">
-                  {(((Number(exchangeRate)) - Number(exchangeRate) * (2/100)) * Number(amount)).toLocaleString(undefined, { maximumFractionDigits: 2 })}{" "}
-                  {/* {calculateFiatAmount()} */}
+                  {/* {(((Number(exchangeRate)) - Number(exchangeRate) * (2/100)) * Number(amount)).toLocaleString(undefined, { maximumFractionDigits: 2 })}{" "} */}
+                  {calculateFiatAmount()}
                    {fiatCurrency}
                 </p>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                  1 {selectedToken} ≈ 
-                  {((Number(exchangeRate)) - Number(exchangeRate) * (2/100)).toLocaleString(undefined, { maximumFractionDigits: 2 })}{" "}
+                  1 {selectedToken} ≈ {(tokenPrices[selectedToken] * parseFloat(exchangeRate || '0')).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                  {/* {((Number(exchangeRate)) - Number(exchangeRate) * (2/100)).toLocaleString(undefined, { maximumFractionDigits: 2 })}{" "} */}
                   {/* // The 2% is a defacto fee for the exchange */} 
                   {/* Sometimes used to cover transactional fees on mobile money */}
                   
@@ -838,15 +863,6 @@ const handleSell = async () => {
           Continue
           <ArrowRight size={18} className="ml-2" />
         </button>
-
-        {/* <button 
-            onClick={handleSell}
-            disabled={!isAmountValid() || !validateMobileNumber(mobileNumber) || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)}
-            className="btn btn-primary w-full flex items-center justify-center"
-          >
-            Continue
-            <ArrowRight size={18} className="ml-2" />
-          </button> */}
 
           <motion.div
             initial={{ opacity: 0 }}
