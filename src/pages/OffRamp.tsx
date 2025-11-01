@@ -1,43 +1,82 @@
 import { useState, useEffect } from 'react';
-import { useAccount, useChainId, useWriteContract } from 'wagmi';
-import { formatUnits, erc20Abi } from 'viem';
+import { useAccount, useChainId, useWriteContract, useBalance,  } from 'wagmi';
+import { formatUnits, erc20Abi, parseEther, parseUnits } from 'viem';
 import { motion } from 'framer-motion';
-import { Phone, Smartphone, ArrowRight, ChevronDown, Loader2, CheckCircle2 } from 'lucide-react';
+import { Phone, Smartphone, ArrowRight, ChevronDown, Loader2, CheckCircle2, Currency } from 'lucide-react';
 
 const RECIPIENT_ADDRESS = '0xDD463C81cb2fA0e95b55c5d7696d8a9755cb1Af2';
 const POLL_INTERVAL = 5000; // 5 seconds
 
-  const TOKEN_ADDRESSES: Record<string, Record<number, string>> = {
-    USDC: {
-      1: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', //Eth mainnet
-      8453: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', //Base mainnet
-      42220: '0xcebA9300f2b948710d2653dD7B07f33A8B32118C', //Celo mainnet
-      //testnetworks
-      84532: '0x036CbD53842c5426634e7929541eC2318f3dCF7e', //Base testnet
-      11155111: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238', //Eth testnet
-      44787: '0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B', //Celo testnet
-      // Add other chain IDs as needed
-    },
-    USDT: {
-      1: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
-      8453: '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb',
-      42220: '0x88eeC49252c8cbc039DCdB394c0c2BA2f1637EA0',
-      84532: '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
-      11155111: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238',
-      44787: '0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B',
-    },
-    OFT: {
-      14: '0xe7cd86e13AC4309349F30B3435a9d337750fC82D',
-    }
-  };
+  // Token addresses for different networks
+type TokenAddresses = Record<number, { USDC?: `0x${string}`; USDT?: `0x${string}`; OFT?: `0x${string}` }>;
 
+const TOKEN_ADDRESSES: TokenAddresses = {
+  // Ethereum Mainnet
+  1: {
+    USDC: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+    USDT: '0xdAC17F958D2ee523a2206206994597C13D831ec7'
+  },
+  // Ethereum Sepolia
+  11155111: {
+    USDC: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238',
+    USDT: '0x7169D38820dfd117C3FA1f22a697dBA58d90BA06'
+  },
+  // Base Mainnet
+  8453: {
+    USDC: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+    USDT: '0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2' //TODO // Dai Stable coin address 
+  },
+  // Base Sepolia
+  84532: {
+    USDC: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+    USDT: '0x7169D38820dfd117C3FA1f22a697dBA58d90BA06'
+  },
+  // Celo Mainnet
+  42220: {
+    USDC: '0xcebA9300f2b948710d2653dD7B07f33A8B32118C',
+    USDT: '0x617f3112bf5397D0467D315cC709EF968D9ba546'
+  },
+  // Celo Alfajores
+  44787: {
+    USDC: '0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B',
+    USDT: '0x7169D38820dfd117C3FA1f22a697dBA58d90BA06'
+  },
+  // Lisk
+  1135: {
+    USDC: '0x1234567890123456789012345678901234567890', // Replace with actual address when available
+    USDT: '0x0987654321098765432109876543210987654321'  // Replace with actual address when available
+  },
+  // Flare
+  14: {
+    OFT: '0xe7cd86e13AC4309349F30B3435a9d337750fC82D'
+  }
+};
 
+type TokenSymbol = 'ETH' | 'USDC' | 'USDT' | 'OFT' | 'FLR';
 
 export default function OffRamp() {
   const { address } = useAccount();
   const chainId = useChainId();
   console.log(chainId);
-  
+// Define which tokens (including native) are supported per chain
+const TOKEN_CONFIG: Record<number, TokenSymbol[]> = {
+  1:      [ 'USDC', 'USDT', 'ETH'],     // Ethereum
+  11155111: [ 'USDC', 'USDT', 'ETH'], // Sepolia
+  8453:   [ 'USDC', 'USDT', 'ETH'],     // Base
+  84532:  ['USDC', 'USDT', 'ETH'],     // Base Sepolia
+  42220:  [ 'USDC', 'USDT', 'ETH'],     // Celo (uses CELO, but ETH alias often works in wagmi)
+  44787:  [ 'USDC', 'USDT', 'ETH'],     // Celo Alfajores
+  1135:   [ 'USDC', 'USDT', 'ETH'],     // Lisk
+  14:     ['OFT', 'FLR'],                     // Flare — ETH NOT supported
+};
+
+// Helper to get available tokens
+const getAvailableTokens = (chainId: number): TokenSymbol[] => {
+  return TOKEN_CONFIG[chainId] || []; // fallback to empty if unknown chain
+};
+
+// Get available tokens for current chain
+const availableTokens = getAvailableTokens(chainId);
   
   // Form State
   const [amount, setAmount] = useState('');
@@ -46,7 +85,7 @@ export default function OffRamp() {
   const [payoutExpanded, setPayoutExpanded] = useState(false);
   const [fiatCurrency, setFiatCurrency] = useState('UGX');
   const [fiatExpanded, setFiatExpanded] = useState(false);
-  const [selectedToken, setSelectedToken] = useState<keyof typeof TOKEN_ADDRESSES>('USDC');
+  const [selectedToken, setSelectedToken] = useState<TokenSymbol>(availableTokens[0] as TokenSymbol || 'USDC');
   const [tokenExpanded, setTokenExpanded] = useState(false);
   const [mobileNumber, setMobileNumber] = useState('');
   const [email, setEmail] = useState('');
@@ -65,9 +104,48 @@ export default function OffRamp() {
 
   const { writeContract, isSuccess: isWriteSuccess, data: writeData } = useWriteContract();
 
+// Fiat currencies
+const fiatCurrencies = [
+  { 
+    uiCode: 'UGX', 
+    apiCode: 'UGX', 
+    symbol: 'USh', 
+    name: 'Ugandan Shilling' 
+  },
+  { 
+    uiCode: 'KSH',   // ← what users see
+    apiCode: 'KES',  // ← what the API expects
+    symbol: 'KSh', 
+    name: 'Kenyan Shilling' 
+  },
+  { 
+    uiCode: 'RWF', 
+    apiCode: 'RWF', 
+    symbol: 'Rwf', 
+    name: 'Rwandan Franc' 
+  },
+];
+
+// Helper to get API code
+const getApiCurrencyCode = (uiCode: string): string => {
+  const currency = fiatCurrencies.find(c => c.uiCode === uiCode);
+  return currency ? currency.apiCode : uiCode; // fallback
+};
+  // Reset selection when chain changes
+useEffect(() => {
+  const tokens = getAvailableTokens(chainId);
+  if (tokens.length === 0) return;
+
+  // If current selection is invalid on this chain, reset
+  if (!tokens.includes(selectedToken)) {
+    setSelectedToken(tokens[0]);
+  }
+}, [chainId, selectedToken]);
+
 
   // useEffect to handle exchangeRate
   useEffect(() => {
+    const apiCode = getApiCurrencyCode(fiatCurrency);
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     fetch("https://open.er-api.com/v6/latest/USD")
     .then((response) => {
@@ -76,107 +154,105 @@ export default function OffRamp() {
       }
       return response.json();
     })
-    .then((data) => {
-      if (data && data.rates && data.rates.UGX) {
-        // setExchangeRate(data.rates.UGX.toFixed(2));
-        // setExchangeRate(data.rates[selectedPair].toFixed(2));
-        setExchangeRate(data.rates[fiatCurrency].toFixed(2));
-      }else {
-        setError(`Rate for {fiatCurrency} not found `);
-        setExchangeRate(null)
+    .then(data => {
+      if (data?.rates && typeof data.rates[apiCode] === 'number') {
+        setExchangeRate(data.rates[apiCode].toFixed(2));
+        setError(null);
+      } else {
+        setError(`Exchange rate for ${fiatCurrency} not available`);
+        setExchangeRate(null);
       }
     })
-    .catch((err) => setError(err.message))
+    .catch((err) => setError(err instanceof Error ? err.message : String(err)))
     .finally(() => console.log("Exchange rate fetched"));
   }, [fiatCurrency]);
 
   
-  // Add useEffect to handle transaction success
+  // centralized helper to send transaction info to backend
+  const sendToBackend = async (txHashParam: string, amountParam: number) => {
+    try {
+      const response = await fetch('https://afriramp-backend2.onrender.com/api/offramp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          tx_hash: txHashParam,
+          amount: amountParam,
+          token: selectedToken,
+          fiat_amount: getFinalReceiveAmount(),
+          fiat_currency: fiatCurrency,
+          payout_method: payoutMethod,
+          mobile_number: mobileNumber,
+          sender_address: address,
+          recipient_address: RECIPIENT_ADDRESS,
+          chain_id: chainId,
+          sender_email: email
+        }),
+      });
+
+      console.log(response);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      const responseData = await response.json();
+      console.log('Backend response:', responseData);
+      setIsSuccess(true);
+    } catch (error) {
+      console.error('Full error details:', {
+        error,
+        request: {
+          url: 'https://afriramp-backend.onrender.com/api/offramp',
+          method: 'POST',
+          body: JSON.stringify({
+            tx_hash: txHashParam,
+            amount: amountParam,
+            token: selectedToken,
+            fiat_amount: calculateFiatAmount(),
+            fiat_currency: fiatCurrency,
+            payout_method: payoutMethod,
+            mobile_number: mobileNumber,
+            sender_address: address,
+            recipient_address: RECIPIENT_ADDRESS,
+            chain_id: chainId
+          }),
+        }
+      });
+      setErrorMessage('Failed to save transaction. Please check console for details.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Add useEffect to handle transaction success & polling
   useEffect(() => {
     if (currentTx?.id) {
-      const intervalId = setInterval(async() => {
+      const intervalId = setInterval(async () => {
         try {
           const response = await fetch(`https://afriramp-backend2.onrender.com/api/offramp/${currentTx.id}`);
-          if(!response.ok) {
+          if (!response.ok) {
             throw new Error('Failed to fetch transaction status');
-          } 
+          }
           const txData = await response.json();
           setCurrentTx(txData);
-        }catch (error) {
+        } catch (error) {
           console.error('Error polling transaction status:', error);
         }
-      }, POLL_INTERVAL)
-      
+      }, POLL_INTERVAL);
+
       return () => clearInterval(intervalId);
     }
 
-    if(isWriteSuccess && writeData) {
-      setTxHash(writeData);
-      // send data to backend
-      const sendToBackend = async () => {
-        try {
-          const response =  await fetch('https://afriramp-backend2.onrender.com/api/offramp', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            // mode: 'cors',
-            body: JSON.stringify({
-              tx_hash: writeData,
-              amount: parseFloat(amount),
-              token: selectedToken,
-              // fiat_amount: calculateFiatAmount(),
-              fiat_amount: getFinalReceiveAmount(), // ✅ Exactly what user sees
-              fiat_currency: fiatCurrency,
-              payout_method: payoutMethod,
-              mobile_number: mobileNumber,
-              sender_address: address,
-              recipient_address: RECIPIENT_ADDRESS,
-              chain_id: chainId,
-              sender_email: email
-            }),
-
-          });
-          console.log(response);
-
-          if(!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-          }
-
-          const responseData = await response.json();
-          console.log('Backend response:', responseData);
-          setIsSuccess(true);
-
-        } catch (error) {
-          console.error('Full error details:', {
-            error,
-            request: {
-              url: 'https://afriramp-backend.onrender.com/api/offramp',
-              method: 'POST',
-              body: JSON.stringify({
-                tx_hash: writeData,
-                amount: parseFloat(amount),
-                token: selectedToken,
-                fiat_amount: calculateFiatAmount(),
-                fiat_currency: fiatCurrency,
-                payout_method: payoutMethod,
-                mobile_number: mobileNumber,
-                sender_address: address,
-                recipient_address: RECIPIENT_ADDRESS,
-                chain_id: chainId }),
-            }
-          });
-          setErrorMessage('Failed to save transaction. Please check console for details.');
-        }finally {
-          setIsSubmitting(false);
-        }
-      };
-
-      sendToBackend();
-
+    if (isWriteSuccess && writeData) {
+      // writeData from useWriteContract is used as the tx hash / data to persist
+      setTxHash(writeData as unknown as string);
+      // send data to backend using centralized helper
+      sendToBackend(writeData as unknown as string, parseFloat(amount));
     }
-  },[isWriteSuccess, writeData]);
+  }, [isWriteSuccess, writeData]);
 
   // After a successful transaction submission, reset page after 10s
   useEffect(() => {
@@ -187,72 +263,116 @@ export default function OffRamp() {
       return () => clearTimeout(timeout);
     }
   }, [txHash, writeData]);
+
+    // Get ETH balance
+  const { data: nativeBalance, isLoading: isEthLoading } = useBalance({
+    address,
+  });
   
-  // Token options
-  const tokens = [
-    { symbol: 'USDC', name: 'USD Coin', icon: '$', price: 1.00 },
-    { symbol: 'USDT', name: 'Tether', icon: '₮', price: 1.00 },
-    { symbol: 'OFT', name: 'Omnichain Fungible Token', icon: '₮0', price: 1.00 },
-  ];
+    // Get USDC balance if available on the current network
+    const { data: usdcBalance, isLoading: isUsdcLoading } = useBalance({
+      address,
+      token: chainId ? TOKEN_ADDRESSES[chainId as keyof typeof TOKEN_ADDRESSES]?.USDC : undefined,
+      unit: 'wei', // 6 decimals for USDC
+      
+    });
+
+      // Get USDT balance if available on the current network
+      const { data: usdtBalance, isLoading: isUsdtLoading } = useBalance({
+        address,
+        token: chainId ? TOKEN_ADDRESSES[chainId as keyof typeof TOKEN_ADDRESSES]?.USDT : undefined,
+        // unit: 'mwei', // 6 decimals for USDT
+        unit: 'wei',
+      });
+
+         // Get USDT balance if available on the current network
+        const { data: oftBalance, isLoading: isOftLoading } = useBalance({
+          address,
+          token: chainId ? TOKEN_ADDRESSES[chainId as keyof typeof TOKEN_ADDRESSES]?.OFT : undefined,
+          unit: 'wei', // 6 decimals for USDT
+        });
   
-  // Get token balance (mock data - would be fetched from blockchain)
-  const getTokenBalance = (symbol: string) => {
-    // Mock balances
-    const balances = {
-      USDC: '1000000000', // 1000 USDC (6 decimals)
-      USDT: '1000000000' , // 1000 USDT (6 decimals)
-      OFT: '1000000000' , // 1000 OFT (6 decimals)
+
+    const getTokenDecimals = (token: TokenSymbol): number => {
+      if (token === 'ETH' || token === 'FLR') return 18;
+      return 6; // USDC, USDT, OFT
     };
-    return formatUnits(BigInt(balances[symbol as keyof typeof balances]), 6);
+  
+const formatBalance = (balance: bigint | undefined, token: TokenSymbol): string => {
+  if (!balance) return '0.00';
+  const decimals = getTokenDecimals(token);
+  const formatted = parseFloat(formatUnits(balance, decimals));
+  return formatted.toFixed(decimals === 18 ? 4 : 2);
+};
+
+  const tokenBalances = {
+    ETH: nativeBalance,
+    FLR: nativeBalance,
+    USDC: usdcBalance,
+    USDT: usdtBalance,
+    OFT: oftBalance,
   };
-  
-  // Available balance for selected token
-  const availableBalance = parseFloat(getTokenBalance(selectedToken));
-  
-  // Fiat currencies
-  const fiatCurrencies = [
-    { code: 'UGX', symbol: 'USh', name: 'Ugandan Shilling' },
-    { code: 'KSH', symbol: 'KSh', name: 'Kenyan Shilling' },
-    
-  ];
+
+    // Get available balance as a JS number (for validation & % buttons)
+  const getAvailableBalanceNumber = (): number => {
+    const balanceData = tokenBalances[selectedToken];
+    if (!balanceData?.value) return 0;
+
+    const decimals = getTokenDecimals(selectedToken);
+    return parseFloat(formatUnits(balanceData.value, decimals));
+  };
+
+  const availableBalanceNum = getAvailableBalanceNumber();
+
+
   
   // Exchange rates (1 USD = X local currency)
   const exchangeRates = {
     // KSH: 143.50, // 1 USD = 143.50 KSH
     KSH: `${exchangeRate}`, // 1 USD = 143.50 KSH
     UGX: `${exchangeRate}`, // 1 USD = 3850.75 UGX
+    RWF: `${exchangeRate}`, // 1 USD = 143.50 KSH
   };
   
   // Get payment methods based on currency
-  const getPaymentMethods = () => {
-    if (fiatCurrency === 'UGX') {
+  const getPaymentMethods = (currency: string) => {
+    if (currency === 'UGX') {
       return [
         { id: 'mtn', name: 'MTN Mobile Money', icon: <Smartphone size={18} /> },
         { id: 'airtel', name: 'Airtel Money', icon: <Phone size={18} /> },
       ];
     } else
-    if (fiatCurrency === 'KSH') {
+    if (currency === 'KSH') {
       return [
         { id: 'mpesa', name: 'M-PESA', icon: <Phone size={18} /> },
       ];
     } 
+    if (currency === 'RWF') {
+      return [
+        { id: 'rwanda', name: 'Rwanda Mobile Money', icon: <Phone size={18} /> },
+        { id: 'airtel', name: 'Airtel Money', icon: <Phone size={18} /> },
+      ]
+    }
     return [];
   };
   
-  // Get current fiat currency symbol
-  const getCurrencySymbol = () => {
-    const currency = fiatCurrencies.find(c => c.code === fiatCurrency);
-    return currency ? currency.symbol : 'USh';
-  };
-  
   // Use percentage of available balance
-  const applyPercentage = (percentage: number) => {
-    if (availableBalance > 0) {
-      const calculatedAmount = (availableBalance * percentage / 100).toFixed(2);
-      setAmount(calculatedAmount.replace(/\.?0+$/, ''));
-    }
-  };
+const applyPercentage = (percentage: number) => {
+  const max = availableBalanceNum;
+  if (max <= 0) return;
+
+  const calculated = (max * percentage) / 100;
+  // Round to appropriate decimals (2 for stablecoins, 4 for ETH/FLR)
+  const decimals = getTokenDecimals(selectedToken) === 18 ? 4 : 2;
+  const formatted = calculated.toFixed(decimals).replace(/\.?0+$/, '');
+  setAmount(formatted);
+};
   
+  const isAmountValid = (): boolean => {
+    if (!amount) return false;
+    const num = parseFloat(amount);
+    return !isNaN(num) && num > 0 && num <= availableBalanceNum;
+  };
   // Calculate fiat amount based on token amount
     const calculateFiatAmount = () => {
       if (!amount || isNaN(parseFloat(amount))) return '0.00';
@@ -281,37 +401,45 @@ const getFinalReceiveAmount = () => {
 };
   
   // Validate mobile number format
-  const validateMobileNumber = (number: string) => {
-    if (fiatCurrency === 'KSH') {
-      // Kenya: +254 or 07xx/01xx format, 9-12 digits
-      return /^(?:\+254|0)[17]\d{8}$/.test(number);
-    } else if (fiatCurrency === 'UGX') {
-      // Uganda: +256 or 07xx format, 9-12 digits
-      return /^(?:\+256|0)[7]\d{8}$/.test(number);
-    }
-    return false;
-  };
+const validateMobileNumber = (number: string) => {
+  const cleaned = number.replace(/\D/g, '');
+  if (fiatCurrency === 'KSH') {
+    return /^(?:254|0)[17]\d{8}$/.test(cleaned);
+  } else if (fiatCurrency === 'UGX') {
+    return /^(?:256|0)[7]\d{8}$/.test(cleaned);
+  } else if (fiatCurrency === 'RWF') {
+    // Rwanda: +250 7xxx xxxxx or 07xxx xxxxx (10 digits after 0 or 250)
+    return /^(?:250|0)7\d{8}$/.test(cleaned);
+  }
+  return false;
+};
   
   // Format mobile number display
-  const formatMobileNumber = (number: string) => {
-    if (!number) return '';
-    // Remove any non-digit characters
-    const cleaned = number.replace(/\D/g, '');
-    if (fiatCurrency === 'KSH') {
-      // Format as 07XX XXX XXX or +254 7XX XXX XXX
-      if (cleaned.startsWith('254')) {
-        return `+${cleaned.slice(0, 3)} ${cleaned.slice(3, 6)} ${cleaned.slice(6, 9)} ${cleaned.slice(9)}`;
-      }
-      return `${cleaned.slice(0, 4)} ${cleaned.slice(4, 7)} ${cleaned.slice(7)}`;
-    } else if (fiatCurrency === 'UGX') {
-      // Format as 07XX XXX XXX or +256 7XX XXX XXX
-      if (cleaned.startsWith('256')) {
-        return `+${cleaned.slice(0, 3)} ${cleaned.slice(3, 6)} ${cleaned.slice(6, 9)} ${cleaned.slice(9)}`;
-      }
-      return `${cleaned.slice(0, 4)} ${cleaned.slice(4, 7)} ${cleaned.slice(7)}`;
+const formatMobileNumber = (number: string) => {
+  if (!number) return '';
+  const cleaned = number.replace(/\D/g, '');
+  
+  if (fiatCurrency === 'KSH') {
+    if (cleaned.startsWith('254')) {
+      return `+254 ${cleaned.slice(3, 6)} ${cleaned.slice(6, 9)} ${cleaned.slice(9)}`;
     }
-    return number;
-  };
+    return `${cleaned.slice(0, 4)} ${cleaned.slice(4, 7)} ${cleaned.slice(7)}`;
+  } 
+  else if (fiatCurrency === 'UGX') {
+    if (cleaned.startsWith('256')) {
+      return `+256 ${cleaned.slice(3, 6)} ${cleaned.slice(6, 9)} ${cleaned.slice(9)}`;
+    }
+    return `${cleaned.slice(0, 4)} ${cleaned.slice(4, 7)} ${cleaned.slice(7)}`;
+  }
+  else if (fiatCurrency === 'RWF') {
+    if (cleaned.startsWith('250')) {
+      return `+250 ${cleaned.slice(3, 6)} ${cleaned.slice(6, 9)} ${cleaned.slice(9)}`;
+    }
+    return `${cleaned.slice(0, 4)} ${cleaned.slice(4, 7)} ${cleaned.slice(7)}`;
+  }
+  
+  return number;
+};
   
   // Handle mobile number input
   const handleMobileNumberChange = (value: string) => {
@@ -323,11 +451,15 @@ const getFinalReceiveAmount = () => {
   // Handle currency change
   const handleCurrencyChange = (currency: string) => {
     setFiatCurrency(currency);
-    // Reset payment method to first available option for new currency
-    const methods = currency === 'UGX' ?  ['mtn', 'airtel'] : ['mpesa'];
-    setPayoutMethod(methods[0]);
-    // Reset mobile number
-    setMobileNumber('');
+  // Get available payment methods for the new currency
+  const methods = getPaymentMethods(currency);
+  if (methods.length > 0) {
+    setPayoutMethod(methods[0].id); // auto-select first
+  } else {
+    setPayoutMethod(''); // fallback
+  }
+
+  setMobileNumber(''); // reset number
   };
 
   const getNetworkName = (chainId: number) => {
@@ -345,51 +477,72 @@ const getFinalReceiveAmount = () => {
   };
   
   // Handle sell action
-  const handleSell = async () => {
-    if(!address || !chainId) return;
+const handleSell = async () => {
+  if (!address || !chainId || !isAmountValid()) return;
 
-    setIsSubmitting(true);
+  setIsSubmitting(true);
 
-    try{
-    const tokenAddress = TOKEN_ADDRESSES[selectedToken]?.[chainId];
-    if (!tokenAddress) {
-      throw new Error('Token address not found for this network');
-    }
-      const decimals = 6; // USDC and USDT both use 6 decimal places
-      const amountInWei = BigInt(parseFloat(amount) * 10 ** decimals);
+  try {
+    const amountNum = parseFloat(amount);
+    const token = selectedToken;
 
-    // ✅ AWAIT the writeContract call
-       const tokenAddressHex = tokenAddress as `0x${string}`;
-       writeContract({
-        address: tokenAddressHex,
-        abi: erc20Abi,
-        functionName: 'transfer',
-        args: [RECIPIENT_ADDRESS, amountInWei],
+    // Handle native token (ETH or FLR)
+    if (token === 'ETH' || token === 'FLR') {
+      // Native transfer: send ETH/FLR directly
+      const value = parseEther(amount); // 18 decimals
+      const { hash } = await window.ethereum.request({
+        method: 'eth_sendTransaction',
+        params: [{
+          from: address,
+          to: RECIPIENT_ADDRESS,
+          value: `0x${value.toString(16)}`,
+          gas: '0x5208', // 21000 gas minimum
+        }],
       });
-    // ✅ You can now set txHash immediately if you want (optional)
-    // setTxHash(hash);
-      // The tx hash will be set in the useEffect when isWriteSuccess and writeData are available
-    
-    } catch (err: unknown) {
-      console.error('Transaction Error:', err);
-      setIsSubmitting(false);
 
-      // Normalize error message safely from unknown
-      const errorMessage = err instanceof Error ? err.message : typeof err === 'string' ? err : JSON.stringify(err);
+      setTxHash(hash);
+      await sendToBackend(hash, amountNum);
+      return;
+    }
 
-      if (errorMessage.includes('User rejected')) {
-        // User cancelled the transaction
-        alert('You canceled the transaction.');
-      } else if (errorMessage.includes('insufficient funds')) {
-        // Insufficient funds
-        alert('Insufficient funds. Please top up your wallet.');
-      } else {
-      // Optionally show user-friendly error
-      alert('Transaction failed. Please try again.');
+    // Handle ERC20 tokens (USDC, USDT, OFT)
+    // Handle ERC20 tokens (USDC, USDT, OFT)
+    const tokenConfig = TOKEN_ADDRESSES[chainId];
+    const tokenAddress = tokenConfig?.[token as keyof typeof tokenConfig];
+
+    if (!tokenAddress) {
+      throw new Error(`Token ${token} not supported on chain ${chainId}`);
+    }
+
+    const decimals = getTokenDecimals(token); // 6 for USDC/USDT/OFT
+    const amountInWei = parseUnits(amount, decimals); // Use viem's helper
+
+    // Use wagmi's writeContract (may not return a hash directly); await it and
+    // rely on useWriteContract's writeData / isWriteSuccess handled in the effect above.
+    await writeContract({
+      address: tokenAddress,
+      abi: erc20Abi,
+      functionName: 'transfer',
+      args: [RECIPIENT_ADDRESS, amountInWei],
+    });
+
+    // writeData/isWriteSuccess will update and trigger the effect to set txHash and notify backend
+    return;
+  } catch (err: unknown) {
+    console.error('Transaction Error:', err);
+    setIsSubmitting(false);
+
+    let message = 'Transaction failed. Please try again.';
+    if (err instanceof Error) {
+      if (err.message.includes('User rejected')) {
+        message = 'You canceled the transaction.';
+      } else if (err.message.includes('insufficient funds')) {
+        message = 'Insufficient funds. Please top up your wallet.';
       }
     }
-    
-  };
+    alert(message);
+  }
+};
 
     // Add a resetPage function
   const resetPage = () => {
@@ -418,16 +571,16 @@ const getFinalReceiveAmount = () => {
         transition={{ duration: 0.3 }}
         className="card"
       >
-        <h2 className="text-xl font-semibold mb-6">Sell Stablecoins</h2>
+        <h2 className="text-xl font-semibold mb-6">Sell Tokens</h2>
         
         <div className="mb-6">
           <div className="flex justify-between mb-1">
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
               You Sell
             </label>
-            {/* <span className="text-sm text-slate-500 dark:text-slate-400">
-              Available: {availableBalance.toFixed(2)} {selectedToken}
-            </span> */}
+            <span className="text-sm text-slate-500 dark:text-slate-400">
+              Available: {formatBalance(tokenBalances[selectedToken]?.value, selectedToken)} {selectedToken}
+            </span>
           </div>
           
           <div className="flex mb-4">
@@ -439,44 +592,32 @@ const getFinalReceiveAmount = () => {
                 className="input pl-12 pr-20"
                 placeholder="0.00"
               />
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500">
-                {tokens.find(t => t.symbol === selectedToken)?.icon}
-              </div>
+              {amount && !isAmountValid() && (
+                <p className="mt-1 text-sm text-error-600 dark:text-error-400">
+                  Amount must be between 0 and {availableBalanceNum.toLocaleString(undefined, {
+                    maximumFractionDigits: getTokenDecimals(selectedToken) === 18 ? 4 : 2
+                  })} {selectedToken}
+                </p>
+              )}
+              {/* Dropdown */}
               
               <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
-                <button
+                <div
                   onClick={() => setTokenExpanded(!tokenExpanded)}
                   className="px-3 py-1 rounded-lg border border-slate-300 dark:border-dark-500 bg-white dark:bg-dark-600 text-slate-900 dark:text-white flex items-center"
                 >
-                  <span>{selectedToken}</span>
-                  <ChevronDown size={16} className={`ml-2 transition-transform ${tokenExpanded ? 'rotate-180' : ''}`} />
-                </button>
-                
-                {tokenExpanded && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="absolute right-0 mt-1 w-48 bg-white dark:bg-dark-700 rounded-lg shadow-lg border border-slate-200 dark:border-dark-600 z-20"
-                  >
-                    <div className="py-1">
-                      {tokens.map(token => (
-                        <button
-                          key={token.symbol}
-                          onClick={() => {
-                            setSelectedToken(token.symbol as keyof typeof TOKEN_ADDRESSES);
-                            setTokenExpanded(false);
-                          }}
-                          className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-dark-600 transition-colors flex items-center"
-                        >
-                          <span className="w-8">{token.icon}</span>
-                          <span>{token.symbol}</span>
-                          <span className="ml-2 text-sm text-slate-500 dark:text-slate-400">{token.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
+                <select
+                  value={selectedToken}
+                  onChange={(e) => setSelectedToken(e.target.value as TokenSymbol)}
+                  className="bg-transparent outline-none cursor-pointer appearance-none text-slate-900 dark:text-white"
+                >
+                  {availableTokens.map((token) => (
+                    <option key={token} value={token}>
+                      {token}
+                    </option>
+                  ))}
+                </select>
+                </div>
               </div>
             </div>
           </div>
@@ -502,9 +643,7 @@ const getFinalReceiveAmount = () => {
           
           <div className="mt-1 p-4 rounded-lg bg-slate-50 dark:bg-dark-600 flex items-center justify-between">
             <div className="flex items-center">
-              <div className="w-8 h-8 rounded-full bg-success-100 dark:bg-success-900/20 text-success-600 dark:text-success-400 flex items-center justify-center mr-3">
-                <span className="text-lg">{getCurrencySymbol()}</span>
-              </div>
+
               <div>
                 <p className="font-medium">
                   {(((Number(exchangeRate)) - Number(exchangeRate) * (2/100)) * Number(amount)).toLocaleString(undefined, { maximumFractionDigits: 2 })}{" "}
@@ -541,15 +680,15 @@ const getFinalReceiveAmount = () => {
                   <div className="py-1">
                     {fiatCurrencies.map(currency => (
                       <button
-                        key={currency.code}
+                        key={currency.uiCode}
                         onClick={() => {
-                          handleCurrencyChange(currency.code);
-                          setFiatExpanded(false);
+                        handleCurrencyChange(currency.uiCode); // store uiCode
+                        setFiatExpanded(false);
                         }}
                         className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-dark-600 transition-colors flex items-center"
                       >
                         <span className="w-12">{currency.symbol}</span>
-                        <span>{currency.code}</span>
+                        <span>{currency.uiCode}</span>
                         <span className="ml-2 text-sm text-slate-500 dark:text-slate-400">{currency.name}</span>
                       </button>
                     ))}
@@ -571,8 +710,8 @@ const getFinalReceiveAmount = () => {
               className="w-full input flex items-center justify-between"
             >
               <div className="flex items-center">
-                {getPaymentMethods().find(m => m.id === payoutMethod)?.icon}
-                <span className="ml-2">{getPaymentMethods().find(m => m.id === payoutMethod)?.name}</span>
+                {getPaymentMethods(fiatCurrency).find(m => m.id === payoutMethod)?.icon}
+                <span className="ml-2">{getPaymentMethods(fiatCurrency).find(m => m.id === payoutMethod)?.name}</span>
               </div>
               <ChevronDown size={16} className={`transition-transform ${payoutExpanded ? 'rotate-180' : ''}`} />
             </button>
@@ -585,7 +724,7 @@ const getFinalReceiveAmount = () => {
                 className="absolute left-0 right-0 mt-1 bg-white dark:bg-dark-700 rounded-lg shadow-lg border border-slate-200 dark:border-dark-600 z-20"
               >
                 <div className="py-1">
-                  {getPaymentMethods().map(method => (
+                  {getPaymentMethods(fiatCurrency).map(method => (
                     <button
                       key={method.id}
                       onClick={() => {
@@ -596,7 +735,7 @@ const getFinalReceiveAmount = () => {
                     >
                       {method.icon}
                       <span className="ml-2">{method.name}</span>
-                    </button>
+                    </button> 
                   ))}
                 </div>
               </motion.div>
@@ -614,10 +753,13 @@ const getFinalReceiveAmount = () => {
               value={formatMobileNumber(mobileNumber)}
               onChange={(e) => handleMobileNumberChange(e.target.value)}
               className="input pl-12 ml-2"
-              placeholder={fiatCurrency === 'KSH' ? ' 0712 345 678' : ' 0775 123 456'}
+              placeholder={fiatCurrency === 'KSH' ? ' 0712 345 678' : 
+              fiatCurrency === 'RWF' ? ' 0788 123 456' : ' 0775 123 456'}
             />
             <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500">
-              {fiatCurrency === 'UGX' ? '+256' : '+254'}
+              {fiatCurrency === 'UGX' ? '+256' :
+              fiatCurrency === 'KSH' ? '+254' :
+              fiatCurrency === 'RWF' ? '+250' : '+...'}
             </div>
           </div>
           {mobileNumber && !validateMobileNumber(mobileNumber) && (
@@ -669,21 +811,30 @@ const getFinalReceiveAmount = () => {
           <div className="flex justify-between font-semibold">
             <span>You Receive</span>
             <span>
-               {/* {((((Number(exchangeRate))  * (98/100)) * Number(amount)) * 0.98).toLocaleString(undefined, { maximumFractionDigits: 2 })}  */}
               {getFinalReceiveAmount().toLocaleString(undefined, { maximumFractionDigits: 2 })}
               {" "}
-              {fiatCurrency}</span>
+              {fiatCurrency}
+            </span>
           </div> 
         </div>
         
         <button 
           onClick={handleSell}
           className="btn btn-primary w-full flex items-center justify-center"
-          disabled={!amount || parseFloat(amount) <= 0 || parseFloat(amount) > availableBalance || !validateMobileNumber(mobileNumber) || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)}
+          disabled={!amount || parseFloat(amount) <= 0 || parseFloat(amount) > availableBalanceNum || !validateMobileNumber(mobileNumber) || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)}
         >
           Continue
           <ArrowRight size={18} className="ml-2" />
         </button>
+
+        {/* <button 
+  onClick={handleSell}
+  disabled={!isAmountValid() || !validateMobileNumber(mobileNumber) || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)}
+  className="btn btn-primary w-full flex items-center justify-center"
+>
+  Continue
+  <ArrowRight size={18} className="ml-2" />
+</button> */}
 
           <motion.div
             initial={{ opacity: 0 }}
@@ -734,11 +885,11 @@ const getFinalReceiveAmount = () => {
 
             </motion.div>
         
-        {parseFloat(amount) > availableBalance && (
+        {/* {parseFloat(amount) > availableBalance && (
           <div className="mt-2 text-sm text-error-600 dark:text-error-400">
             Insufficient balance. Maximum amount: {availableBalance.toFixed(2)} {selectedToken}
           </div>
-        )}
+        )} */}
       </motion.div>
       
       <motion.div
