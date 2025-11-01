@@ -544,12 +544,23 @@ const handleSell = async () => {
 
     // Use wagmi's writeContract (may not return a hash directly); await it and
     // rely on useWriteContract's writeData / isWriteSuccess handled in the effect above.
-    await writeContract({
+    // ✅ This returns the tx hash directly in wagmi v2
+    const hash = await writeContract({
       address: tokenAddress,
       abi: erc20Abi,
       functionName: 'transfer',
       args: [RECIPIENT_ADDRESS, amountInWei],
     });
+
+    if(hash !== undefined){
+          setTxHash(hash);
+          await sendToBackend(hash, amountNum);
+    }else {
+      console.error(Error);
+      throw new Error('Transaction failed. Please try again.');
+    }
+
+
 
     // writeData/isWriteSuccess will update and trigger the effect to set txHash and notify backend
     return;
