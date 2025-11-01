@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAccount, useChainId, useWriteContract, useBalance,  } from 'wagmi';
 import { formatUnits, erc20Abi, parseEther, parseUnits } from 'viem';
 import { motion } from 'framer-motion';
-import { Phone, Smartphone, ArrowRight, ChevronDown, Loader2, CheckCircle2, Currency } from 'lucide-react';
+import { Phone, Smartphone, ArrowRight, ChevronDown, Loader2, CheckCircle2, } from 'lucide-react';
 
 const RECIPIENT_ADDRESS = '0xDD463C81cb2fA0e95b55c5d7696d8a9755cb1Af2';
 const POLL_INTERVAL = 5000; // 5 seconds
@@ -564,6 +564,18 @@ const handleSell = async () => {
   };
   
   return (
+        <div className="card overflow-hidden">
+      <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-primary-500 to-accent-500" />
+      
+      <h2 className="text-lg font-semibold mb-6">Your Balance</h2>
+      
+      {isEthLoading || isUsdcLoading || isUsdtLoading || isOftLoading ? (
+        <div className="flex flex-col items-center py-6">
+          <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-slate-500 dark:text-slate-400">Loading balances...</p>
+        </div>
+      ) : (
+        <>
     <div className="space-y-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -828,13 +840,13 @@ const handleSell = async () => {
         </button>
 
         {/* <button 
-  onClick={handleSell}
-  disabled={!isAmountValid() || !validateMobileNumber(mobileNumber) || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)}
-  className="btn btn-primary w-full flex items-center justify-center"
->
-  Continue
-  <ArrowRight size={18} className="ml-2" />
-</button> */}
+            onClick={handleSell}
+            disabled={!isAmountValid() || !validateMobileNumber(mobileNumber) || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)}
+            className="btn btn-primary w-full flex items-center justify-center"
+          >
+            Continue
+            <ArrowRight size={18} className="ml-2" />
+          </button> */}
 
           <motion.div
             initial={{ opacity: 0 }}
@@ -964,5 +976,9 @@ const handleSell = async () => {
         </ul>
       </motion.div>
     </div>
+    </>
+      )
+   }
+   </div>
   );
 }
