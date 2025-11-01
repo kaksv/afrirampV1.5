@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAccount, useChainId, useWriteContract, useBalance, useSendTransaction, useWalletClient  } from 'wagmi';
+import { useAccount, useChainId, useBalance, useSendTransaction, useWalletClient  } from 'wagmi';
 import { formatUnits, erc20Abi, parseEther, parseUnits } from 'viem';
 import { motion } from 'framer-motion';
 import { Phone, Smartphone, ArrowRight, ChevronDown, Loader2, CheckCircle2, } from 'lucide-react';
@@ -103,7 +103,7 @@ const availableTokens = getAvailableTokens(chainId);
   // const [selectedPair, setSelectedPair] = useState("UGX") //This works interchangably with fiatCurrency but we are to use it to get prices
 
 
-  const { writeContract, isSuccess: isWriteSuccess, data: writeData } = useWriteContract();
+  // const { writeContract, isSuccess: isWriteSuccess, data: writeData } = useWriteContract();
   const { data: walletClient } = useWalletClient();
 
 // Fiat currencies
