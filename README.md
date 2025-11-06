@@ -1,17 +1,13 @@
-# Reown AppKit Example using wagmi and solana (Vite + React)
+# AFRIRAMP
 
-This is a [Vite](https://vitejs.dev) project together with React.
+Making access to fiat and crypto seamless through [Afriramp](https://afriramp.xyz).
 
 ## Usage
 
-1. Go to [Reown Dashboard](https://dashboard.reown.com) and create a new project.
-2. Copy your `Project ID`
-3. Rename `.env.example` to `.env` and paste your `Project ID` as the value for `VITE_PROJECT_ID`
-4. Run `pnpm install` to install dependencies
-5. Run `pnpm run dev` to start the development server
+1. Go to [Afriramp](https://afriramp.xyz) and select a service.
+2. Chose to Offramp, onramp pay bills and more.
+3. Select service based on country: Uganda, Kenya or Rwanda.
+4. And do all this seamlessly.
 
-## Resources
 
-- [Reown — Docs](https://docs.reown.com)
-- [Vite — GitHub](https://github.com/vitejs/vite)
-- [Vite — Docs](https://vitejs.dev/guide/)
+
