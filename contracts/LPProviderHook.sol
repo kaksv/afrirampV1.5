@@ -39,6 +39,25 @@ contract OctantVaultHook is BaseHook {
 
     function getHookPermissions() public pure override returns (Hooks.Permissions memory) {
         // TODO: Turn true the hooks to use.
+                return(
+            Hooks.Permissions({
+                beforeInitialize: true,
+                afterinItialize: false,
+                beforeAddLiquidity: false,
+                beforeRemoveLiquidity: false,
+                afterAddLiquidity: false,
+                afterRemoveLiquidity: false,
+                beforeSwap: true,
+                afterSwap: true,
+                beforeDonate: false,
+                beforeSwapReturnDelta: false,
+                afterSwapReturnDelta: false,
+                afterAddLiquidityReturnDelta: false,
+                afterRemoveLiquidityReturnDelta: false
+
+
+            })
+        );
     }
 
     function _beforeInitialize(address, PoolKey calldata key, uint160) internal pure override returns(bytes4) {
