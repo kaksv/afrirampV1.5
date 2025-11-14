@@ -5,7 +5,8 @@ import { usePublicClient,
 useTransactionCount } from 'wagmi';
 import { useEffect, useState } from 'react';
 import BalanceCard from '../components/BalanceCard';
-import TransactionHistory from '../components/TransactionHistory';
+// import TransactionHistory from '../components/TransactionHistory';
+import SwapTokens from '../components/SwapTokens';
 import { 
   // ArrowRightLeft, 
   // Network, 
@@ -190,7 +191,8 @@ export default function Dashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.4 }}
         >
-          <TransactionHistory limit={4} showCount={true} />
+          {/* <TransactionHistory limit={4} showCount={true} /> */}
+          <SwapTokens />
         </motion.div>
       </div>
       
