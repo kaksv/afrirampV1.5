@@ -639,13 +639,13 @@ const handleSell = async () => {
                 className="input pl-12 pr-20"
                 placeholder="0.00"
               />
-              {/* {amount && !isAmountValid() && (
+              {amount && !isAmountValid() && (
                 <p className="mt-1 text-sm text-error-600 dark:text-error-400">
                   Amount must be between 0 and {availableBalanceNum.toLocaleString(undefined, {
                     maximumFractionDigits: getTokenDecimals(selectedToken) === 18 ? 4 : 2
                   })} {selectedToken}
                 </p>
-              )} */}
+              )}
               {/* Dropdown */}
               
               <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
