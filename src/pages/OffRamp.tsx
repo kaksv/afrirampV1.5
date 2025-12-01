@@ -274,7 +274,7 @@ useEffect(() => {
       console.error('Full error details:', {
         error,
         request: {
-          url: 'https://afriramp-backend.onrender.com/api/offramp',
+          url: 'https://afriramp-backend2.onrender.com/api/offramp',
           method: 'POST',
           body: JSON.stringify({
             tx_hash: txHashParam,
