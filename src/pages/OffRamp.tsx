@@ -569,6 +569,9 @@ const handleSell = async () => {
       });
     }
 
+    // ✅ Got hash — now send to backend
+    setTxHash(hash);
+
     // ✅ Only set state & send to backend ONCE — after hash is confirmed
     // ❗ Critical: use try/catch on backend call explicitly
     try {
