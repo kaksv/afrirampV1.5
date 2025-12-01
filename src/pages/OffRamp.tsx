@@ -883,49 +883,48 @@ const handleSell = async () => {
         <button 
           onClick={handleSell}
           className="btn btn-primary w-full flex items-center justify-center"
-          disabled={!amount || parseFloat(amount) <= 0 || parseFloat(amount) > availableBalanceNum || !validateMobileNumber(mobileNumber) || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) }
+          disabled={!amount || parseFloat(amount) <= 0 || parseFloat(amount) > availableBalanceNum || !validateMobileNumber(mobileNumber) || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || submitStatus === 'submitting'}
         >
-          Continue
+          {submitStatus === 'submitting' ? 'Confirming...' : 'Continue'}
           <ArrowRight size={18} className="ml-2" />
         </button>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1}}
-            className={'card p-6 text-center mt-3'}
-            >
-              {submitStatus === 'submitting' ? (
-                <div>
-                  <Loader2 className='animate-spin h-12 w-12 mx-auto mb-4 text-primary-500' />
-                  <p className='text-lg font-semibold mb-2'>Processing Transaction</p>
-                  <p className='text-slate-500 dark:text-slate-400'>
-                    Please confirm the transaction in your wallet to continue.
-                  </p>
-                </div>
-              ) : submitStatus === 'success' && txHash ? (
-                <div>
-                  <CheckCircle2 className='h-12 w-12 mx-auto mb-4 text-success-500' />
-                  <p className='text-lg font-semibold mb-2'>Transaction Succesful!</p>
-                  <p className='text-slate-500 dark:text-slate-400 mb-4'>
-                    {amount} {selectedToken} has been sent on {getNetworkName(chainId)}
-                  </p>
-                    <a 
-                      href={getExplorerUrl(chainId, txHash!)} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-primary-600 dark:text-primary-400 hover:underline"
-                    >
-                      View on {getNetworkName(chainId)}
-                      {/* View on {getNetworkName(chainId).split(' ')[0]} Explorer */}
-                    </a>
-                    <p className="mt-4 text-sm text-slate-500">
-                        Page will refresh shortly...
-                      </p>
-                </div>
-              ) : null
-              }
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="card p-6 text-center mt-3"
+        >
+          {submitStatus === 'submitting' ? (
+            <div>
+              <Loader2 className="animate-spin h-12 w-12 mx-auto mb-4 text-primary-500" />
+              <p className="text-lg font-semibold mb-2">Processing Transaction</p>
+              <p className="text-slate-500 dark:text-slate-400">
+                Please confirm the transaction in your wallet.
+              </p>
+            </div>
+          ) : submitStatus === 'success' && txHash ? (
+            <div>
+              <CheckCircle2 className="h-12 w-12 mx-auto mb-4 text-success-500" />
+              <p className="text-lg font-semibold mb-2">Transaction Successful!</p>
+              <p className="text-slate-500 dark:text-slate-400 mb-4">
+                {amount} {selectedToken} sent on {getNetworkName(chainId)}
+              </p>
+              <a 
+                href={getExplorerUrl(chainId, txHash)} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-primary-600 dark:text-primary-400 hover:underline"
+              >
+                View on {getNetworkName(chainId).split(' ')[0]} Explorer
+              </a>
+              <p className="mt-4 text-sm text-slate-500">
+                Page will refresh shortly...
+              </p>
+            </div>
+          ) : null}
+        </motion.div>
 
-              {submitStatus === 'submitting' && (
+              {/* {submitStatus === 'submitting' && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                   <div className="bg-white dark:bg-dark-700 p-6 rounded-xl text-center">
                     <Loader2 className="animate-spin h-8 w-8 mx-auto mb-4 text-primary-500" />
@@ -939,9 +938,9 @@ const handleSell = async () => {
                     </p>
                   </div>
                 </div>
-              )}
+              )} */}
 
-            </motion.div>
+            
         
         {/* {parseFloat(amount) > availableBalance && (
           <div className="mt-2 text-sm text-error-600 dark:text-error-400">
