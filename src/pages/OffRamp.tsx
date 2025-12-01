@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useAccount, useChainId, useWriteContract, useBalance, useSendTransaction, useWalletClient  } from 'wagmi';
+import { useAccount, useChainId, useBalance, useSendTransaction, useWalletClient  } from 'wagmi';
 import { formatUnits, erc20Abi, parseEther, parseUnits } from 'viem';
 import { motion } from 'framer-motion';
 import { Phone, Smartphone, ArrowRight, ChevronDown, Loader2, CheckCircle2, } from 'lucide-react';
 
 const RECIPIENT_ADDRESS = '0xDD463C81cb2fA0e95b55c5d7696d8a9755cb1Af2';
-const POLL_INTERVAL = 5000; // 5 seconds
+// const POLL_INTERVAL = 5000; // 5 seconds
 
   // Token addresses for different networks
 type TokenAddresses = Record<number, { USDC?: `0x${string}`; USDT?: `0x${string}`; OFT?: `0x${string}` }>;
@@ -76,6 +76,37 @@ const getAvailableTokens = (chainId: number): TokenSymbol[] => {
   return TOKEN_CONFIG[chainId] || []; // fallback to empty if unknown chain
 };
 
+// Helper to get transaction hashes based on the different chains.
+// Add this helper function — minimal and safe
+const getExplorerUrl = (chainId: number, txHash: string): string => {
+  switch (chainId) {
+    case 1:      return `https://etherscan.io/tx/${txHash}`;
+    case 11155111: return `https://sepolia.etherscan.io/tx/${txHash}`;
+    case 8453:   return `https://basescan.org/tx/${txHash}`;
+    case 84532:  return `https://sepolia.basescan.org/tx/${txHash}`;
+    case 42220:  return `https://explorer.celo.org/mainnet/tx/${txHash}`;
+    case 44787:  return `https://alfajores.celoscan.io/tx/${txHash}`;
+    case 1135:   return `https://explorer.lisk.com/tx/${txHash}`;
+    case 14:     return `https://flare-explorer.flare.network/tx/${txHash}`;
+    default:     return `https://basescan.org/tx/${txHash}`; // fallback to Base
+  }
+};
+
+const getNetworkName = (chainId: number): string => {
+  switch (chainId) {
+    case 1: return 'Etherscan';
+    case 11155111: return 'Sepolia Testnet';
+    case 8453: return 'BaseScan';
+    case 84532: return 'Base Sepolia';
+    case 42220: return 'Celo Explorer';
+    case 44787: return 'Celo Alfajores';
+    case 14: return 'Flare Explorer';
+    case 1135: return 'Lisk';
+    default: return `Network (${chainId})`;
+  }
+};
+
+
 // Get available tokens for current chain
 const availableTokens = getAvailableTokens(chainId);
   
@@ -91,11 +122,12 @@ const availableTokens = getAvailableTokens(chainId);
   const [mobileNumber, setMobileNumber] = useState('');
   const [email, setEmail] = useState('');
   const [txHash, setTxHash] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // const [isSubmitting, setIsSubmitting] = useState(false);
   const [, setIsSuccess] = useState(false);
   const [, setErrorMessage] = useState('');
   const [, ] = useState('created');
-   const [currentTx, setCurrentTx] = useState<any>(null);
+   const [, setCurrentTx] = useState<any>(null);
+   const [submitStatus, setSubmitStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
 
   //  Rates use states
   const [exchangeRate, setExchangeRate] = useState<string | null>(null);
@@ -103,7 +135,7 @@ const availableTokens = getAvailableTokens(chainId);
   // const [selectedPair, setSelectedPair] = useState("UGX") //This works interchangably with fiatCurrency but we are to use it to get prices
 
 
-  const {  isSuccess: isWriteSuccess, data: writeData } = useWriteContract();
+  // const {  isSuccess: isWriteSuccess, data: writeData } = useWriteContract();
   const { data: walletClient } = useWalletClient();
 
 // Fiat currencies
@@ -260,46 +292,57 @@ useEffect(() => {
       });
       setErrorMessage('Failed to save transaction. Please check console for details.');
     } finally {
-      setIsSubmitting(false);
+      setSubmitStatus('idle');
     }
   };
 
+  // Auto-reset after success
+useEffect(() => {
+  let timeout: NodeJS.Timeout;
+  if (submitStatus === 'success') {
+    timeout = setTimeout(() => {
+      resetPage();
+    }, 5000); // 5 seconds — fast but readable
+  }
+  return () => clearTimeout(timeout);
+}, [submitStatus]);
+
   // Add useEffect to handle transaction success & polling
-  useEffect(() => {
-    if (currentTx?.id) {
-      const intervalId = setInterval(async () => {
-        try {
-          const response = await fetch(`https://afriramp-backend2.onrender.com/api/offramp/${currentTx.id}`);
-          if (!response.ok) {
-            throw new Error('Failed to fetch transaction status');
-          }
-          const txData = await response.json();
-          setCurrentTx(txData);
-        } catch (error) {
-          console.error('Error polling transaction status:', error);
-        }
-      }, POLL_INTERVAL);
+  // useEffect(() => {
+  //   if (currentTx?.id) {
+  //     const intervalId = setInterval(async () => {
+  //       try {
+  //         const response = await fetch(`https://afriramp-backend2.onrender.com/api/offramp/${currentTx.id}`);
+  //         if (!response.ok) {
+  //           throw new Error('Failed to fetch transaction status');
+  //         }
+  //         const txData = await response.json();
+  //         setCurrentTx(txData);
+  //       } catch (error) {
+  //         console.error('Error polling transaction status:', error);
+  //       }
+  //     }, POLL_INTERVAL);
 
-      return () => clearInterval(intervalId);
-    }
+  //     return () => clearInterval(intervalId);
+  //   }
 
-    if (isWriteSuccess && writeData) {
-      // writeData from useWriteContract is used as the tx hash / data to persist
-      setTxHash(writeData as unknown as string);
-      // send data to backend using centralized helper
-      sendToBackend(writeData as unknown as string, parseFloat(amount));
-    }
-  }, [isWriteSuccess, writeData]);
+  //   if (isWriteSuccess && writeData) {
+  //     // writeData from useWriteContract is used as the tx hash / data to persist
+  //     setTxHash(writeData as unknown as string);
+  //     // send data to backend using centralized helper
+  //     sendToBackend(writeData as unknown as string, parseFloat(amount));
+  //   }
+  // }, [isWriteSuccess, writeData]);
 
   // After a successful transaction submission, reset page after 10s
-  useEffect(() => {
-    if (txHash && writeData) {
-      const timeout = setTimeout(() => {
-        resetPage();
-      }, 10000); // 10 seconds
-      return () => clearTimeout(timeout);
-    }
-  }, [txHash, writeData]);
+  // useEffect(() => {
+  //   if (txHash && writeData) {
+  //     const timeout = setTimeout(() => {
+  //       resetPage();
+  //     }, 10000); // 10 seconds
+  //     return () => clearTimeout(timeout);
+  //   }
+  // }, [txHash, writeData]);
 
     // Get ETH balance
   const { data: nativeBalance, isLoading: isEthLoading } = useBalance({
@@ -492,90 +535,59 @@ const formatMobileNumber = (number: string) => {
 
   setMobileNumber(''); // reset number
   };
-
-  const getNetworkName = (chainId: number) => {
-    switch(chainId) {
-      case 1: return 'Ethereum Mainnet';
-      case 11155111: return 'Sepolia Testnet';
-      case 8453: return 'Base Mainnet';
-      case 84532: return 'Base Sepolia';
-      case 42220: return 'Celo Mainnet';
-      case 44787: return 'Celo Alfajores';
-      case 1135: return 'Lisk';
-      case 14: return 'Flare';
-      default: return `Network (${chainId})`;
-    }
-  };
   
   // Handle sell action
+// Handle sell action
 const handleSell = async () => {
-  if (!address || !chainId || !isAmountValid()) return;
+  if (!address || !chainId || !isAmountValid() || !validateMobileNumber(mobileNumber) || !email) return;
 
-  setIsSubmitting(true);
+  setSubmitStatus('submitting'); // ✅ Show modal + loader
 
   try {
     const amountNum = parseFloat(amount);
     const token = selectedToken;
-
-    // let hash: string;
+    let hash: string;
 
     if (token === 'ETH' || token === 'FLR') {
       const value = parseEther(amount);
-      const hash = await sendTransactionAsync({ to: RECIPIENT_ADDRESS, value });
-      setTxHash(hash);
-      await sendToBackend(hash, amountNum);
+      hash = await sendTransactionAsync({ to: RECIPIENT_ADDRESS, value });
     } else {
       // ERC20
       if (!walletClient) throw new Error('Wallet not connected');
       const tokenConfig = TOKEN_ADDRESSES[chainId];
       const tokenAddress = tokenConfig?.[token as keyof typeof tokenConfig];
-      if (!tokenAddress) throw new Error(`Token ${token} not supported`);
+      if (!tokenAddress) throw new Error(`Token ${token} not supported on chain ${chainId}`);
 
       const decimals = getTokenDecimals(token);
       const amountInWei = parseUnits(amount, decimals);
 
-      const hash = await walletClient.writeContract({
+      hash = await walletClient.writeContract({
         address: tokenAddress,
         abi: erc20Abi,
         functionName: 'transfer',
         args: [RECIPIENT_ADDRESS, amountInWei],
       });
+    }
 
-      setTxHash(hash);
+    // ✅ Only set state & send to backend ONCE — after hash is confirmed
+    // ❗ Critical: use try/catch on backend call explicitly
+    try {
       await sendToBackend(hash, amountNum);
-
+      // ✅ Backend succeeded → show success UI NOW
+      setSubmitStatus('success');
+    } catch (backendErr) {
+      console.error('Backend registration failed:', backendErr);
+      setSubmitStatus('error');
+      alert('⚠️ Transaction succeeded on-chain, but we failed to register it.\nPlease contact support with your hash:\n' + hash);
+      return;
     }
-
-
-    // ✅ Now safely send to backend
-    const response = await fetch('https://afriramp-backend2.onrender.com/api/offramp', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        tx_hash: txHash, // ✅ guaranteed to be a string
-        amount: amountNum,
-        token: selectedToken,
-        fiat_amount: getFinalReceiveAmount(),
-        fiat_currency: fiatCurrency,
-        payout_method: payoutMethod,
-        mobile_number: mobileNumber,
-        sender_address: address,
-        recipient_address: RECIPIENT_ADDRESS,
-        chain_id: chainId,
-        sender_email: email,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Backend error:', errorText);
-      alert('Transaction succeeded on-chain, but we failed to register it. Please contact support with your transaction hash.');
-    }
-
   } catch (err: unknown) {
     console.error('Transaction Error:', err);
-    setIsSubmitting(false);
-    // ... alert logic
+    setSubmitStatus('error');
+    const msg = err instanceof Error ? err.message : 'Transaction failed';
+    alert('❌ ' + msg);
+  } finally {
+    setSubmitStatus('idle');
   }
 };
 
@@ -591,7 +603,7 @@ const handleSell = async () => {
     setMobileNumber('');
     setEmail('');
     setTxHash(null);
-    setIsSubmitting(false);
+    setSubmitStatus('idle');
     setIsSuccess(false);
     setErrorMessage('');
     setCurrentTx(null);
@@ -868,7 +880,7 @@ const handleSell = async () => {
         <button 
           onClick={handleSell}
           className="btn btn-primary w-full flex items-center justify-center"
-          disabled={!amount || parseFloat(amount) <= 0 || parseFloat(amount) > availableBalanceNum || !validateMobileNumber(mobileNumber) || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)}
+          disabled={!amount || parseFloat(amount) <= 0 || parseFloat(amount) > availableBalanceNum || !validateMobileNumber(mobileNumber) || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) }
         >
           Continue
           <ArrowRight size={18} className="ml-2" />
@@ -879,33 +891,38 @@ const handleSell = async () => {
             animate={{ opacity: 1}}
             className={'card p-6 text-center mt-3'}
             >
-              {isSubmitting ? (
+              {submitStatus === 'submitting' ? (
                 <div>
                   <Loader2 className='animate-spin h-12 w-12 mx-auto mb-4 text-primary-500' />
                   <p className='text-lg font-semibold mb-2'>Processing Transaction</p>
                   <p className='text-slate-500 dark:text-slate-400'>
-                    Please confirm the transaction in your wallet.
+                    Please confirm the transaction in your wallet to continue.
                   </p>
                 </div>
-              ) : txHash && writeData ? (
+              ) : submitStatus === 'success' && txHash ? (
                 <div>
                   <CheckCircle2 className='h-12 w-12 mx-auto mb-4 text-success-500' />
                   <p className='text-lg font-semibold mb-2'>Transaction Succesful!</p>
                   <p className='text-slate-500 dark:text-slate-400 mb-4'>
                     {amount} {selectedToken} has been sent on {getNetworkName(chainId)}
                   </p>
-                    <a href={`https://basescan.org/tx/${txHash}`}
-                      target="_blank"
-                      rel='noopener noreferrer'
-                      className='text-primary-600 dark:text-primary-400 hover:underline'
-                      >
-                        View on Etherscan
-                      </a>
+                    <a 
+                      href={getExplorerUrl(chainId, txHash!)} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-primary-600 dark:text-primary-400 hover:underline"
+                    >
+                      View on {getNetworkName(chainId)}
+                      {/* View on {getNetworkName(chainId).split(' ')[0]} Explorer */}
+                    </a>
+                    <p className="mt-4 text-sm text-slate-500">
+                        Page will refresh shortly...
+                      </p>
                 </div>
-              ) : ''
+              ) : null
               }
 
-              {isSubmitting && (
+              {submitStatus === 'submitting' && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                   <div className="bg-white dark:bg-dark-700 p-6 rounded-xl text-center">
                     <Loader2 className="animate-spin h-8 w-8 mx-auto mb-4 text-primary-500" />
