@@ -4,56 +4,56 @@ import {
   //  useChainId 
   } from 'wagmi';
 // import { formatEther,  formatUnits  } from 'viem';
-import { ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+// import { ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 // Token addresses for different networks
-type TokenAddresses = Record<number, { USDC?: `0x${string}`; USDT?: `0x${string}`; OFT?: `0x${string}` }>;
+// type TokenAddresses = Record<number, { USDC?: `0x${string}`; USDT?: `0x${string}`; OFT?: `0x${string}` }>;
 
-const TOKEN_ADDRESSES: TokenAddresses = {
-  // Ethereum Mainnet
-  1: {
-    USDC: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-    USDT: '0xdAC17F958D2ee523a2206206994597C13D831ec7'
-  },
-  // Ethereum Sepolia
-  11155111: {
-    USDC: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238',
-    USDT: '0x7169D38820dfd117C3FA1f22a697dBA58d90BA06'
-  },
-  // Base Mainnet
-  8453: {
-    USDC: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-    USDT: '0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2' //TODO // Dai Stable coin address 0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb
-  },
-  // Base Sepolia
-  84532: {
-    USDC: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-    USDT: '0x7169D38820dfd117C3FA1f22a697dBA58d90BA06'
-  },
-  // Celo Mainnet
-  42220: {
-    USDC: '0xcebA9300f2b948710d2653dD7B07f33A8B32118C',
-    USDT: '0x617f3112bf5397D0467D315cC709EF968D9ba546'
-  },
-  // Celo Alfajores
-  44787: {
-    USDC: '0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B',
-    USDT: '0x7169D38820dfd117C3FA1f22a697dBA58d90BA06'
-  },
-  // Lisk
-  1135: {
-    USDC: '0x1234567890123456789012345678901234567890', // Replace with actual address when available
-    USDT: '0x0987654321098765432109876543210987654321'  // Replace with actual address when available
-  },
-  // Flare
-  14: {
-    // USDC: '0x1234567890123456789012345678901234567890', // Replace with actual address when available
-    // USDT: '0xe7cd86e13AC4309349F30B3435a9d337750fC82D',  // Replace with actual address when available
-    OFT: '0xe7cd86e13AC4309349F30B3435a9d337750fC82D'
-  }
-};
+// const TOKEN_ADDRESSES: TokenAddresses = {
+//   // Ethereum Mainnet
+//   1: {
+//     USDC: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+//     USDT: '0xdAC17F958D2ee523a2206206994597C13D831ec7'
+//   },
+//   // Ethereum Sepolia
+//   11155111: {
+//     USDC: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238',
+//     USDT: '0x7169D38820dfd117C3FA1f22a697dBA58d90BA06'
+//   },
+//   // Base Mainnet
+//   8453: {
+//     USDC: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+//     USDT: '0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2' //TODO // Dai Stable coin address 0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb
+//   },
+//   // Base Sepolia
+//   84532: {
+//     USDC: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+//     USDT: '0x7169D38820dfd117C3FA1f22a697dBA58d90BA06'
+//   },
+//   // Celo Mainnet
+//   42220: {
+//     USDC: '0xcebA9300f2b948710d2653dD7B07f33A8B32118C',
+//     USDT: '0x617f3112bf5397D0467D315cC709EF968D9ba546'
+//   },
+//   // Celo Alfajores
+//   44787: {
+//     USDC: '0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B',
+//     USDT: '0x7169D38820dfd117C3FA1f22a697dBA58d90BA06'
+//   },
+//   // Lisk
+//   1135: {
+//     USDC: '0x1234567890123456789012345678901234567890', // Replace with actual address when available
+//     USDT: '0x0987654321098765432109876543210987654321'  // Replace with actual address when available
+//   },
+//   // Flare
+//   14: {
+//     // USDC: '0x1234567890123456789012345678901234567890', // Replace with actual address when available
+//     // USDT: '0xe7cd86e13AC4309349F30B3435a9d337750fC82D',  // Replace with actual address when available
+//     OFT: '0xe7cd86e13AC4309349F30B3435a9d337750fC82D'
+//   }
+// };
 
 // ERC20 ABI for token balance queries
 // const ERC20_ABI = [
