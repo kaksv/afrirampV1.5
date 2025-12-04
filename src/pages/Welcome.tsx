@@ -195,7 +195,7 @@ export default function Welcome() {
                 {[
                   { icon: <Wallet size={20} />, text: 'Simple Wallet' },
                   { icon: <Shield size={20} />, text: 'Secure Transactions' },
-                  { icon: <BarChart4 size={20} />, text: 'Track Portfolio' },
+                  { icon: <BarChart4 size={20} />, text: 'Utility Tools' },
                   { icon: <Globe size={20} />, text: 'Global Support' }
                 ].map((feature, index) => (
                   <motion.div 
