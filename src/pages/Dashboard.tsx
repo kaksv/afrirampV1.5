@@ -183,7 +183,7 @@ export default function Dashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.3 }}
         >
-          <BalanceCard />
+          <SwapTokens />
         </motion.div>
         
         <motion.div
@@ -192,7 +192,7 @@ export default function Dashboard() {
           transition={{ duration: 0.3, delay: 0.4 }}
         >
           {/* <TransactionHistory limit={4} showCount={true} /> */}
-          <SwapTokens />
+          <BalanceCard />
         </motion.div>
       </div>
       

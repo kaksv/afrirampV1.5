@@ -2,8 +2,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   LayoutDashboard, 
-  ArrowUpRight, 
-  ArrowDownLeft, 
+  // ArrowUpRight, 
+  // ArrowDownLeft, 
   DollarSign, 
   CreditCard, 
   Clock, 
@@ -22,8 +22,8 @@ export default function Sidebar({ onClose }: SidebarProps) {
   
   const navigationItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Send', path: '/send', icon: ArrowUpRight },
-    { name: 'Receive', path: '/receive', icon: ArrowDownLeft },
+    // { name: 'Send', path: '/send', icon: ArrowUpRight },
+    // { name: 'Receive', path: '/receive', icon: ArrowDownLeft },
     { name: 'Buy Stable Coins', path: '/onramp', icon: DollarSign },
     { name: 'Sell Stable Coins', path: '/offramp', icon: CreditCard },
         { name: 'Buy Airtime with Stables', path: '/buyairtime', icon: Smartphone }, // <-- Add this line

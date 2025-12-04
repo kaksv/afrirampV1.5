@@ -29,10 +29,10 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     switch (path) {
       case '/dashboard':
         return 'Dashboard';
-      case '/send':
-        return 'Send ETH';
-      case '/receive':
-        return 'Receive ETH';
+      // case '/send':
+      //   return 'Send ETH';
+      // case '/receive':
+      //   return 'Receive ETH';
       case '/onramp':
         return 'Buy ';
       case '/offramp':

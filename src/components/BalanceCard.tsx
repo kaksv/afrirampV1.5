@@ -1,8 +1,9 @@
-import { useAccount, useBalance, useChainId } from 'wagmi';
-import {
-  //  formatEther, 
-   formatUnits 
-  } from 'viem';
+import { 
+  // useAccount,
+   useBalance, 
+  //  useChainId 
+  } from 'wagmi';
+// import { formatEther,  formatUnits  } from 'viem';
 import { ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -73,53 +74,55 @@ const TOKEN_ADDRESSES: TokenAddresses = {
 // ] as const;
 
 export default function BalanceCard() {
-  const { address } = useAccount();
-  const chainId = useChainId();
+  // const { address } = useAccount();
+  // const chainId = useChainId();
   
   // Get ETH balance
-  const { data: ethBalance, isLoading: isEthLoading } = useBalance({
-    address,
+  const {
+    //  data: ethBalance,
+      isLoading: isEthLoading } = useBalance({
+    // address,
   });
   
   // Get USDC balance if available on the current network
-  const { data: usdcBalance, isLoading: isUsdcLoading } = useBalance({
-    address,
-    token: chainId ? TOKEN_ADDRESSES[chainId as keyof typeof TOKEN_ADDRESSES]?.USDC : undefined,
-    unit: 'wei', // 6 decimals for USDC
+  // const { data: usdcBalance, isLoading: isUsdcLoading } = useBalance({
+  //   address,
+  //   token: chainId ? TOKEN_ADDRESSES[chainId as keyof typeof TOKEN_ADDRESSES]?.USDC : undefined,
+  //   unit: 'wei', // 6 decimals for USDC
     
-  });
+  // });
   
   // Get USDT balance if available on the current network
-  const { data: usdtBalance, isLoading: isUsdtLoading } = useBalance({
-    address,
-    token: chainId ? TOKEN_ADDRESSES[chainId as keyof typeof TOKEN_ADDRESSES]?.USDT : undefined,
-    // unit: 'mwei', // 6 decimals for USDT
-    unit: 'wei',
-  });
+  // const { data: usdtBalance, isLoading: isUsdtLoading } = useBalance({
+  //   address,
+  //   token: chainId ? TOKEN_ADDRESSES[chainId as keyof typeof TOKEN_ADDRESSES]?.USDT : undefined,
+  //   // unit: 'mwei', // 6 decimals for USDT
+  //   unit: 'wei',
+  // });
 
    // Get USDT balance if available on the current network
-  const { data: oftBalance, isLoading: isOftLoading } = useBalance({
-    address,
-    token: chainId ? TOKEN_ADDRESSES[chainId as keyof typeof TOKEN_ADDRESSES]?.OFT : undefined,
-    unit: 'wei', // 6 decimals for USDT
-  });
+  // const { data: oftBalance, isLoading: isOftLoading } = useBalance({
+  //   address,
+  //   token: chainId ? TOKEN_ADDRESSES[chainId as keyof typeof TOKEN_ADDRESSES]?.OFT : undefined,
+  //   unit: 'wei', // 6 decimals for USDT
+  // });
   
-  const formatBalance = (balance: bigint | undefined, decimals: number = 18) => {
-    if (!balance) return '0.00';
-    return parseFloat(formatUnits(balance, decimals)).toFixed(decimals === 18 ? 4 : 2);
-  };
+  // const formatBalance = (balance: bigint | undefined, decimals: number = 18) => {
+  //   if (!balance) return '0.00';
+  //   return parseFloat(formatUnits(balance, decimals)).toFixed(decimals === 18 ? 4 : 2);
+  // };
   
-  const isTokenSupported = (token: 'USDC' | 'USDT' | 'OFT') => {
-    return chainId && TOKEN_ADDRESSES[chainId as keyof typeof TOKEN_ADDRESSES]?.[token];
-  };
+  // const isTokenSupported = (token: 'USDC' | 'USDT' | 'OFT') => {
+  //   return chainId && TOKEN_ADDRESSES[chainId as keyof typeof TOKEN_ADDRESSES]?.[token];
+  // };
   
   return (
     <div className="card overflow-hidden">
       <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-primary-500 to-accent-500" />
       
-      <h2 className="text-lg font-semibold mb-6">Your Balance</h2>
+      <h2 className="text-lg font-semibold mb-6">Utilities.</h2>
       
-      {isEthLoading || isUsdcLoading || isUsdtLoading || isOftLoading ? (
+      {isEthLoading ? (
         <div className="flex flex-col items-center py-6">
           <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mb-4"></div>
           <p className="text-slate-500 dark:text-slate-400">Loading balances...</p>
@@ -129,7 +132,7 @@ export default function BalanceCard() {
 
           <div className="space-y-4 mb-6">
             {/* ETH Balance */}
-            <Link to="/eth">
+            {/* <Link to="/eth">
             <div className="p-4 rounded-lg bg-slate-50 dark:bg-dark-600">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
@@ -137,17 +140,17 @@ export default function BalanceCard() {
                     <span className="text-lg">Ξ</span>
                   </div>
                   <div>
-                    <p className="font-medium">{chainId === 8453 ? 'ETH' : chainId === 42220 ? 'CELO' : chainId === 14 ? 'FLR' : 'ETH'}</p>
+                    <p className="font-medium">{chainId === 8453 ? 'ETH' : chainId === 42220 ? 'CELO' : chainId === 14 ? 'FLR' : 'ETH'}</p> */}
                     {/* <p className="text-sm text-slate-500 dark:text-slate-400">{formatBalance(ethBalance?.value)}</p> */}
-                  </div>
+                  {/* </div>
                 </div>
                 <p className="text-xl font-bold">{formatBalance(ethBalance?.value)}</p>
               </div>
             </div>
-            </Link>
+            </Link> */}
             
             {/* USDC Balance */}
-            {isTokenSupported('USDC') && (
+            {/* {isTokenSupported('USDC') && (
               <Link to="/usdc">
               <div className="p-4 rounded-lg bg-slate-50 dark:bg-dark-600">
                 <div className="flex items-center justify-between">
@@ -164,10 +167,10 @@ export default function BalanceCard() {
                 </div>
               </div>
               </Link>
-            )}
+            )} */}
             
             {/* USDT Balance */}
-            {isTokenSupported('USDT') && (
+            {/* {isTokenSupported('USDT') && (
               <Link to="/usdt">
               <div className="p-4 rounded-lg bg-slate-50 dark:bg-dark-600">
                 <div className="flex items-center justify-between">
@@ -184,10 +187,10 @@ export default function BalanceCard() {
                 </div>
               </div>
               </Link>
-            )}
+            )} */}
 
             {/* OFT Balance */}
-            {isTokenSupported('OFT') && (
+            {/* {isTokenSupported('OFT') && (
               <Link to="/oft">
               <div className="p-4 rounded-lg bg-slate-50 dark:bg-dark-600">
                 <div className="flex items-center justify-between">
@@ -204,10 +207,10 @@ export default function BalanceCard() {
                 </div>
               </div>
               </Link>
-            )}
+            )} */}
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
+          {/* <div className="grid grid-cols-2 gap-4">
             <Link 
               to="/send" 
               className="btn btn-primary flex items-center justify-center"
@@ -222,7 +225,7 @@ export default function BalanceCard() {
               <ArrowDownLeft size={18} className="mr-2" />
               Receive Tokens
             </Link>
-          </div>
+          </div> */}
           
           <div className="mt-6 grid grid-cols-2 gap-4">
             <Link 

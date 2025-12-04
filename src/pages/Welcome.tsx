@@ -161,13 +161,13 @@ export default function Welcome() {
                 </div>
                 
                 <h1 className="hidden md:block text-3xl md:text-5xl font-bold mb-6">
-                  <span className="gradient-text">On and Offramp</span> USDC and USDT
+                  <span className="gradient-text">Move Assets seamlessly </span> Ochain.
                   <br />
-                  <span className="gradient-text">with ease</span>
+                  {/* <span className="gradient-text">Acess local mobile money accross subsaharan Africa.</span> */}
                 </h1>
                 
                 <p className="text-2xl md:text-2xl text-slate-600 dark:text-slate-300 mb-8 leading-relaxed">
-                  The simplest way to buy, sell, send, and receive stablecoins in East Africa.
+                  Acess local mobile money accross subsaharan Africa.
                 </p>
               </motion.div>
               
