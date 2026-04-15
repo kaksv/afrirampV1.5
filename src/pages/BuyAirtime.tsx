@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAccount, useChainId, useWriteContract } from 'wagmi';
+import { useAccount, useChainId, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import { formatUnits, erc20Abi } from 'viem';
 import { motion } from 'framer-motion';
 import { Phone, Smartphone, ArrowRight, ChevronDown, Loader2, CheckCircle2 } from 'lucide-react';
@@ -60,6 +60,14 @@ export default function BuyAirtime() {
 
 
   const { writeContract, isSuccess: isWriteSuccess, data: writeData } = useWriteContract();
+  const { isSuccess: isReceiptSuccess } = useWaitForTransactionReceipt({
+    hash: writeData,
+    chainId,
+    confirmations: 1,
+    query: {
+      enabled: Boolean(writeData && chainId),
+    },
+  });
 
 
   // useEffect to handle exchangeRate
@@ -108,6 +116,9 @@ export default function BuyAirtime() {
 
     if(isWriteSuccess && writeData) {
       setTxHash(writeData);
+    }
+
+    if(isReceiptSuccess && writeData) {
       // send data to backend
       const sendToBackend = async () => {
         const MAX_RETRIES = 12; // ~60 seconds at 5s interval
@@ -219,7 +230,7 @@ export default function BuyAirtime() {
       sendToBackend();
 
     }
-  },[isWriteSuccess, writeData]);
+  },[isWriteSuccess, isReceiptSuccess, writeData]);
 
   // After a successful transaction submission, reset page after 10s
   useEffect(() => {
