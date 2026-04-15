@@ -31,6 +31,17 @@ const POLL_INTERVAL = 5000; // 5 seconds
 
 
 export default function BuyAirtime() {
+  type AirtimeOrder = {
+    id: number;
+    status?: string;
+    provider_response?: {
+      responses?: Array<{ status?: string; requestId?: string }>;
+      errorMessage?: string;
+    };
+    error_message?: string;
+    provider_reference?: string;
+  };
+
   const { address } = useAccount();
   const chainId = useChainId();
   console.log(chainId);
@@ -49,9 +60,10 @@ export default function BuyAirtime() {
   const [txHash, setTxHash] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [, setErrorMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const [, ] = useState('created');
-   const [currentTx, setCurrentTx] = useState<unknown>(null);
+  const [currentTxId, setCurrentTxId] = useState<number | null>(null);
+  const [currentTx, setCurrentTx] = useState<AirtimeOrder | null>(null);
 
   //  Rates use states
   const [exchangeRate, setExchangeRate] = useState<string | null>(null);
@@ -95,12 +107,51 @@ export default function BuyAirtime() {
   }, [fiatCurrency]);
 
   
-  // Add useEffect to handle transaction success
+  const getAirtimeUiStatus = (order: AirtimeOrder | null): 'queued' | 'sent' | 'failed' | null => {
+    if (!order) return null;
+
+    const providerStatus = order.provider_response?.responses?.[0]?.status?.toLowerCase() || '';
+    if (
+      order.status === 'fulfillment_failed' ||
+      providerStatus.includes('failed') ||
+      providerStatus.includes('error')
+    ) {
+      return 'failed';
+    }
+    if (
+      providerStatus.includes('success') ||
+      providerStatus.includes('sent') ||
+      providerStatus.includes('completed')
+    ) {
+      return 'sent';
+    }
+    if (
+      order.status === 'submitted_to_provider' ||
+      order.status === 'provider_response_received' ||
+      order.status === 'pending_fulfillment' ||
+      order.status === 'created'
+    ) {
+      return 'queued';
+    }
+    return 'queued';
+  };
+
+  const getAirtimeStatusText = (order: AirtimeOrder | null) => {
+    const uiStatus = getAirtimeUiStatus(order);
+    if (uiStatus === 'sent') return 'Airtime sent successfully.';
+    if (uiStatus === 'failed') {
+      return order?.error_message || order?.provider_response?.errorMessage || 'Airtime delivery failed.';
+    }
+    if (uiStatus === 'queued') return 'Airtime request accepted and queued with provider.';
+    return '';
+  };
+
+  // Poll order status after backend creates the order.
   useEffect(() => {
-    if (currentTx ) {
+    if (currentTxId) {
       const intervalId = setInterval(async() => {
         try {
-          const response = await fetch(`https://afriramp-backend2.onrender.com/api/buyairtime/${currentTx}`);
+          const response = await fetch(`https://afriramp-backend2.onrender.com/api/buyairtime/${currentTxId}`);
           if(!response.ok) {
             throw new Error('Failed to fetch transaction status');
           } 
@@ -114,6 +165,17 @@ export default function BuyAirtime() {
       return () => clearInterval(intervalId);
     }
 
+    return undefined;
+  }, [currentTxId]);
+
+  useEffect(() => {
+    if (getAirtimeUiStatus(currentTx) !== 'queued' && currentTxId) {
+      setCurrentTxId(null);
+    }
+  }, [currentTx, currentTxId]);
+
+  // Handle transaction + backend submission lifecycle
+  useEffect(() => {
     if(isWriteSuccess && writeData) {
       setTxHash(writeData);
     }
@@ -149,7 +211,7 @@ export default function BuyAirtime() {
         };
 
         try {
-          let responseData: unknown = null;
+          let responseData: AirtimeOrder | null = null;
           let lastErrorData: unknown = null;
           let submitted = false;
 
@@ -202,6 +264,10 @@ export default function BuyAirtime() {
           }
 
           console.log('Backend response:', responseData);
+          if (responseData?.id) {
+            setCurrentTx(responseData);
+            setCurrentTxId(responseData.id);
+          }
           setIsSuccess(true);
 
         } catch (error) {
@@ -228,13 +294,14 @@ export default function BuyAirtime() {
 
   // After a successful transaction submission, reset page after 10s
   useEffect(() => {
-    if (isSuccess && txHash) {
+    if (isSuccess && txHash && getAirtimeUiStatus(currentTx) !== 'queued') {
       const timeout = setTimeout(() => {
         resetPage();
-      }, 10000); // 10 seconds
+      }, 15000);
       return () => clearTimeout(timeout);
     }
-  }, [isSuccess, txHash]);
+    return undefined;
+  }, [isSuccess, txHash, currentTx]);
   
   // Token options
   const tokens = [
@@ -456,6 +523,7 @@ const getFinalReceiveAmount = () => {
     setIsSubmitting(false);
     setIsSuccess(false);
     setErrorMessage('');
+    setCurrentTxId(null);
     setCurrentTx(null);
     // Reset any other state as needed
   };
@@ -739,6 +807,39 @@ const getFinalReceiveAmount = () => {
           Continue
           <ArrowRight size={18} className="ml-2" />
         </button>
+
+        {errorMessage && (
+          <div className="mt-3 text-sm text-error-600 dark:text-error-400">
+            {errorMessage}
+          </div>
+        )}
+
+        {currentTx && (
+          <div className="mt-3 rounded-lg border border-slate-200 dark:border-dark-600 p-4 text-sm">
+            <div className="flex items-center justify-between mb-1">
+              <span className="font-medium text-slate-700 dark:text-slate-200">Airtime Status</span>
+              <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                getAirtimeUiStatus(currentTx) === 'sent'
+                  ? 'bg-success-100 text-success-700 dark:bg-success-900/20 dark:text-success-300'
+                  : getAirtimeUiStatus(currentTx) === 'failed'
+                    ? 'bg-error-100 text-error-700 dark:bg-error-900/20 dark:text-error-300'
+                    : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300'
+              }`}>
+                {getAirtimeUiStatus(currentTx) === 'sent'
+                  ? 'sent'
+                  : getAirtimeUiStatus(currentTx) === 'failed'
+                    ? 'failed'
+                    : 'queued'}
+              </span>
+            </div>
+            <p className="text-slate-600 dark:text-slate-400">{getAirtimeStatusText(currentTx)}</p>
+            {currentTx.provider_reference && (
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-500">
+                Provider ref: {currentTx.provider_reference}
+              </p>
+            )}
+          </div>
+        )}
 
           <motion.div
             initial={{ opacity: 0 }}
