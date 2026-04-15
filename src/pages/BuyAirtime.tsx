@@ -48,7 +48,7 @@ export default function BuyAirtime() {
   const [email, setEmail] = useState('');
   const [txHash, setTxHash] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [, setIsSuccess] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [, setErrorMessage] = useState('');
   const [, ] = useState('created');
    const [currentTx, setCurrentTx] = useState<unknown>(null);
@@ -126,7 +126,8 @@ export default function BuyAirtime() {
 
         const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-        const buildPayload = () => ({
+        // Freeze payload so retries do not pick up cleared/reset form state.
+        const payload = {
           tx_hash: writeData,
           amount: parseFloat(amount),
           token: selectedToken,
@@ -138,7 +139,7 @@ export default function BuyAirtime() {
           recipient_address: RECIPIENT_ADDRESS,
           chain_id: chainId,
           sender_email: email.trim()
-        });
+        };
 
         const shouldRetryForReceipt = (errorData: unknown) => {
           if (!errorData || typeof errorData !== 'object') return false;
@@ -158,7 +159,7 @@ export default function BuyAirtime() {
               headers: {
                 'Content-Type': 'application/json'
               },
-              body: JSON.stringify(buildPayload())
+              body: JSON.stringify(payload)
             });
 
             if (response.ok) {
@@ -210,18 +211,7 @@ export default function BuyAirtime() {
               url: 'https://afriramp-backend2.onrender.com/api/buyairtime',
               method: 'POST',
               body: JSON.stringify({
-                tx_hash: writeData,
-                amount: parseFloat(amount),
-                token: selectedToken,
-                // fiat_amount: calculateFiatAmount(),
-                fiat_amount: getFinalReceiveAmount(), // ✅ Exactly what user sees
-                fiat_currency: fiatCurrency,
-                payout_method: payoutMethod,
-                mobile_number: getBackendMobileNumber(),
-                sender_address: address,
-                recipient_address: RECIPIENT_ADDRESS,
-                chain_id: chainId,
-                sender_email: email.trim()
+                ...payload
               }),
             }
           });
@@ -238,13 +228,13 @@ export default function BuyAirtime() {
 
   // After a successful transaction submission, reset page after 10s
   useEffect(() => {
-    if (txHash && writeData) {
+    if (isSuccess && txHash) {
       const timeout = setTimeout(() => {
         resetPage();
       }, 10000); // 10 seconds
       return () => clearTimeout(timeout);
     }
-  }, [txHash, writeData]);
+  }, [isSuccess, txHash]);
   
   // Token options
   const tokens = [
@@ -414,6 +404,14 @@ const getFinalReceiveAmount = () => {
   // Handle sell action
   const handleSell = async () => {
     if(!address || !chainId) return;
+    if (!amount || Number.isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
+      setErrorMessage('Please enter a valid amount before continuing.');
+      return;
+    }
+    if (!validateMobileNumber(mobileNumber)) {
+      setErrorMessage('Please enter a valid mobile number before continuing.');
+      return;
+    }
     const normalizedEmail = email.trim();
     if (!normalizedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
       setErrorMessage('Please enter a valid email before continuing.');
