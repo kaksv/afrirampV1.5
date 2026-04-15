@@ -110,37 +110,83 @@ export default function BuyAirtime() {
       setTxHash(writeData);
       // send data to backend
       const sendToBackend = async () => {
+        const MAX_RETRIES = 12; // ~60 seconds at 5s interval
+        const RETRY_DELAY_MS = 5000;
+
+        const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+        const buildPayload = () => ({
+          tx_hash: writeData,
+          amount: parseFloat(amount),
+          token: selectedToken,
+          fiat_amount: getFinalReceiveAmount(), // Exactly what user sees
+          fiat_currency: fiatCurrency,
+          payout_method: payoutMethod,
+          mobile_number: mobileNumber,
+          sender_address: address,
+          recipient_address: RECIPIENT_ADDRESS,
+          chain_id: chainId,
+          sender_email: email
+        });
+
+        const shouldRetryForReceipt = (errorData: unknown) => {
+          if (!errorData || typeof errorData !== 'object') return false;
+          const maybeDetails = (errorData as { details?: { reason?: string } }).details;
+          const reason = maybeDetails?.reason || '';
+          return typeof reason === 'string' && reason.includes('Transaction receipt not yet available');
+        };
+
         try {
-          const response =  await fetch('https://afriramp-backend2.onrender.com/api/buyairtime', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            // mode: 'cors',
-            body: JSON.stringify({
-              tx_hash: writeData,
-              amount: parseFloat(amount),
-              token: selectedToken,
-              // fiat_amount: calculateFiatAmount(),
-              fiat_amount: getFinalReceiveAmount(), // ✅ Exactly what user sees
-              fiat_currency: fiatCurrency,
-              payout_method: payoutMethod,
-              mobile_number: mobileNumber,
-              sender_address: address,
-              recipient_address: RECIPIENT_ADDRESS,
-              chain_id: chainId,
-              sender_email: email
-            }),
+          let responseData: unknown = null;
+          let lastErrorData: unknown = null;
+          let submitted = false;
 
-          });
-          console.log(response);
+          for (let attempt = 0; attempt <= MAX_RETRIES; attempt += 1) {
+            const response = await fetch('https://afriramp-backend2.onrender.com/api/buyairtime', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(buildPayload())
+            });
 
-          if(!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+            if (response.ok) {
+              responseData = await response.json();
+              submitted = true;
+              break;
+            }
+
+            const errorData = await response.json().catch(() => ({
+              error: 'Request failed',
+              message: `HTTP error! status: ${response.status}`
+            }));
+            lastErrorData = errorData;
+            console.error('buyairtime backend error:', {
+              status: response.status,
+              attempt: attempt + 1,
+              errorData
+            });
+
+            if (response.status === 400 && shouldRetryForReceipt(errorData) && attempt < MAX_RETRIES) {
+              await wait(RETRY_DELAY_MS);
+              continue;
+            }
+
+            throw new Error(
+              (errorData as { error?: string; message?: string })?.error ||
+              (errorData as { error?: string; message?: string })?.message ||
+              `HTTP error! status: ${response.status}`
+            );
           }
 
-          const responseData = await response.json();
+          if (!submitted) {
+            throw new Error(
+              (lastErrorData as { error?: string; message?: string })?.error ||
+              (lastErrorData as { error?: string; message?: string })?.message ||
+              'Timed out waiting for onchain receipt confirmation'
+            );
+          }
+
           console.log('Backend response:', responseData);
           setIsSuccess(true);
 
