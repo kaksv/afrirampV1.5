@@ -133,7 +133,7 @@ export default function BuyAirtime() {
           fiat_amount: getFinalReceiveAmount(), // Exactly what user sees
           fiat_currency: fiatCurrency,
           payout_method: payoutMethod,
-          mobile_number: mobileNumber,
+          mobile_number: getBackendMobileNumber(),
           sender_address: address,
           recipient_address: RECIPIENT_ADDRESS,
           chain_id: chainId,
@@ -184,6 +184,7 @@ export default function BuyAirtime() {
             }
 
             throw new Error(
+              (errorData as { order?: { error_message?: string } })?.order?.error_message ||
               (errorData as { error?: string; message?: string })?.message ||
               (errorData as { error?: string; message?: string })?.error ||
               `HTTP error! status: ${response.status}`
@@ -192,6 +193,7 @@ export default function BuyAirtime() {
 
           if (!submitted) {
             throw new Error(
+              (lastErrorData as { order?: { error_message?: string } })?.order?.error_message ||
               (lastErrorData as { error?: string; message?: string })?.message ||
               (lastErrorData as { error?: string; message?: string })?.error ||
               'Timed out waiting for onchain receipt confirmation'
@@ -215,7 +217,7 @@ export default function BuyAirtime() {
                 fiat_amount: getFinalReceiveAmount(), // ✅ Exactly what user sees
                 fiat_currency: fiatCurrency,
                 payout_method: payoutMethod,
-                mobile_number: mobileNumber,
+                mobile_number: getBackendMobileNumber(),
                 sender_address: address,
                 recipient_address: RECIPIENT_ADDRESS,
                 chain_id: chainId,
@@ -364,6 +366,26 @@ const getFinalReceiveAmount = () => {
     // Remove any non-digit characters
     const cleaned = value.replace(/\D/g, '');
     setMobileNumber(cleaned);
+  };
+
+  // Convert local number to E.164 for backend/provider.
+  const getBackendMobileNumber = () => {
+    const cleaned = mobileNumber.replace(/\D/g, '');
+    if (!cleaned) return '';
+
+    if (fiatCurrency === 'UGX') {
+      if (cleaned.startsWith('256')) return `+${cleaned}`;
+      if (cleaned.startsWith('0')) return `+256${cleaned.slice(1)}`;
+      return `+256${cleaned}`;
+    }
+
+    if (fiatCurrency === 'KSH') {
+      if (cleaned.startsWith('254')) return `+${cleaned}`;
+      if (cleaned.startsWith('0')) return `+254${cleaned.slice(1)}`;
+      return `+254${cleaned}`;
+    }
+
+    return cleaned;
   };
   
   // Handle currency change
