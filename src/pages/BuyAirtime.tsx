@@ -148,7 +148,7 @@ export default function BuyAirtime() {
           console.error('Full error details:', {
             error,
             request: {
-              url: 'https://afriramp-backend.onrender.com/api/buyairtime',
+              url: 'https://afriramp-backend2.onrender.com/api/buyairtime',
               method: 'POST',
               body: JSON.stringify({
                 tx_hash: writeData,
