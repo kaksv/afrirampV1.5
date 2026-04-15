@@ -184,16 +184,16 @@ export default function BuyAirtime() {
             }
 
             throw new Error(
-              (errorData as { error?: string; message?: string })?.error ||
               (errorData as { error?: string; message?: string })?.message ||
+              (errorData as { error?: string; message?: string })?.error ||
               `HTTP error! status: ${response.status}`
             );
           }
 
           if (!submitted) {
             throw new Error(
-              (lastErrorData as { error?: string; message?: string })?.error ||
               (lastErrorData as { error?: string; message?: string })?.message ||
+              (lastErrorData as { error?: string; message?: string })?.error ||
               'Timed out waiting for onchain receipt confirmation'
             );
           }
