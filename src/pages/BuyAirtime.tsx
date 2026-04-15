@@ -137,7 +137,7 @@ export default function BuyAirtime() {
           sender_address: address,
           recipient_address: RECIPIENT_ADDRESS,
           chain_id: chainId,
-          sender_email: email
+          sender_email: email.trim()
         });
 
         const shouldRetryForReceipt = (errorData: unknown) => {
@@ -218,7 +218,9 @@ export default function BuyAirtime() {
                 mobile_number: mobileNumber,
                 sender_address: address,
                 recipient_address: RECIPIENT_ADDRESS,
-                chain_id: chainId }),
+                chain_id: chainId,
+                sender_email: email.trim()
+              }),
             }
           });
           setErrorMessage('Failed to save transaction. Please check console for details.');
@@ -390,6 +392,11 @@ const getFinalReceiveAmount = () => {
   // Handle sell action
   const handleSell = async () => {
     if(!address || !chainId) return;
+    const normalizedEmail = email.trim();
+    if (!normalizedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      setErrorMessage('Please enter a valid email before continuing.');
+      return;
+    }
 
     setIsSubmitting(true);
 
