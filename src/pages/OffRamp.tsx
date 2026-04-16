@@ -16,6 +16,11 @@ const TOKEN_ADDRESSES: TokenAddresses = {
     USDC: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
     USDT: '0xdAC17F958D2ee523a2206206994597C13D831ec7'
   },
+  // BNB Smart Chain Mainnet
+  56: {
+    USDC: '0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d',
+    USDT: '0x55d398326f99059ff775485246999027b3197955'
+  },
   // Ethereum Sepolia
   11155111: {
     USDC: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238',
@@ -62,6 +67,7 @@ export default function OffRamp() {
 // Define which tokens (including native) are supported per chain
 const TOKEN_CONFIG: Record<number, TokenSymbol[]> = {
   1:      [ 'USDC', 'USDT', 'ETH'],     // Ethereum
+  56:     [ 'USDC', 'USDT', 'ETH'],     // BNB Smart Chain
   11155111: [ 'USDC', 'USDT', 'ETH'], // Sepolia
   8453:   [ 'USDC', 'USDT', 'ETH'],     // Base
   84532:  ['USDC', 'USDT', 'ETH'],     // Base Sepolia
@@ -81,6 +87,7 @@ const getAvailableTokens = (chainId: number): TokenSymbol[] => {
 const getExplorerUrl = (chainId: number, txHash: string): string => {
   switch (chainId) {
     case 1:      return `https://etherscan.io/tx/${txHash}`;
+    case 56:     return `https://bscscan.com/tx/${txHash}`;
     case 11155111: return `https://sepolia.etherscan.io/tx/${txHash}`;
     case 8453:   return `https://basescan.org/tx/${txHash}`;
     case 84532:  return `https://sepolia.basescan.org/tx/${txHash}`;
@@ -95,6 +102,7 @@ const getExplorerUrl = (chainId: number, txHash: string): string => {
 const getNetworkName = (chainId: number): string => {
   switch (chainId) {
     case 1: return 'Etherscan';
+    case 56: return 'BscScan';
     case 11155111: return 'Sepolia Testnet';
     case 8453: return 'BaseScan';
     case 84532: return 'Base Sepolia';

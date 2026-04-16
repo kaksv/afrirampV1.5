@@ -10,6 +10,7 @@ const POLL_INTERVAL = 5000; // 5 seconds
   const TOKEN_ADDRESSES = {
     USDC: {
       1: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', //Eth mainnet
+      56: '0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d', //BNB Smart Chain
       8453: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', //Base mainnet
       42220: '0xcebA9300f2b948710d2653dD7B07f33A8B32118C', //Celo mainnet
       //testnetworks
@@ -20,6 +21,7 @@ const POLL_INTERVAL = 5000; // 5 seconds
     },
     USDT: {
       1: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+      56: '0x55d398326f99059ff775485246999027b3197955',
       8453: '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb',
       42220: '0x88eeC49252c8cbc039DCdB394c0c2BA2f1637EA0',
       84532: '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
@@ -458,6 +460,7 @@ const getFinalReceiveAmount = () => {
   const getNetworkName = (chainId: number) => {
     switch(chainId) {
       case 1: return 'Ethereum Mainnet';
+      case 56: return 'BNB Smart Chain';
       case 11155111: return 'Sepolia Testnet';
       case 8453: return 'Base Mainnet';
       case 84532: return 'Base Sepolia';

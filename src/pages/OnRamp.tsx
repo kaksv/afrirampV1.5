@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAccount, useEstimateFeesPerGas } from 'wagmi';
-import { base } from 'wagmi/chains';
+import { useAccount, useChainId, useEstimateFeesPerGas } from 'wagmi';
 import { motion } from 'framer-motion';
 import { ArrowRight, ChevronDown, Phone, Smartphone, Loader2, CheckCircle2 } from 'lucide-react';
 
@@ -24,6 +23,7 @@ const CLOUDINARY_CLOUD_NAME = 'dagn33ye3';
 
 export default function OnRamp() {
   const { address } = useAccount();
+  const chainId = useChainId();
 
   // Image upload to cloudinary.
   const [, setImage] = useState<File | null>(null);
@@ -146,7 +146,7 @@ export default function OnRamp() {
 
   // calculate gas on the blockchain.
   const gasResult = useEstimateFeesPerGas({
-    chainId: base.id,
+    chainId,
     formatUnits: 'wei',
   });
 
@@ -279,7 +279,7 @@ export default function OnRamp() {
 
   // Handle buy action
   const handleBuy = async () => {
-    if (!address || !fiatAmount || !validateMobileNumber(mobileNumber) || !imageUrl) {
+    if (!address || !chainId || !fiatAmount || !validateMobileNumber(mobileNumber) || !imageUrl) {
       window.alert('Please fill in all required fields and upload proof image');
       return;
     }
@@ -292,7 +292,7 @@ export default function OnRamp() {
       sender_mobile: mobileNumber,
       sender_email: email,
       recipient_address: address,
-      chain_id: 8453, // Base mainnet
+      chain_id: chainId,
       image_url: imageUrl, // Add the Cloudinary URL here
     };
 
