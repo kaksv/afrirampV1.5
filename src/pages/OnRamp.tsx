@@ -97,7 +97,7 @@ export default function OnRamp() {
         }
       })
       .catch((err) => console.error(err))
-      .finally(() => console.log("ETH price fetched"));
+      .finally(() => { /* console.log("ETH price fetched"); */ });
   }, []);
 
   // useEffect to handle exchangeRate
@@ -118,7 +118,7 @@ export default function OnRamp() {
         }
       })
       .catch((err) => console.error(err))
-      .finally(() => console.log("Exchange rate fetched"));
+      .finally(() => { /* console.log("Exchange rate fetched"); */ });
   }, [fiatCurrency]);
 
   // After a successful transaction submission, reset page after 10s
@@ -247,7 +247,7 @@ export default function OnRamp() {
   const submitTransaction = async (transactionData: OnrampTransaction) => {
     setIsSubmitting(true);
     try {
-      console.log('Sending transaction data:', transactionData);
+      // console.log('Sending transaction data:', transactionData);
 
       const response = await fetch('https://afriramp-backend2.onrender.com/api/onramp', {
         method: 'POST',
@@ -255,8 +255,8 @@ export default function OnRamp() {
         body: JSON.stringify(transactionData),
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
+      // console.log('Response status:', response.status);
+      // console.log('Response headers:', response.headers);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -265,7 +265,7 @@ export default function OnRamp() {
       }
 
       const result = await response.json();
-      console.log('Success response:', result);
+      // console.log('Success response:', result);
       setIsSuccess(true);
       setTransactionId(result.id);
       return result;

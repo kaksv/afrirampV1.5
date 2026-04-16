@@ -95,14 +95,14 @@ export default function History() {
         const onrampData = onrampResponse.ok
           ? await onrampResponse.json().catch(() => [])
           : [];
-        console.log("onrampData", onrampData);
+        // console.log("onrampData", onrampData);
         // Fetch offramp transactions
         const offrampUrl = `https://afriramp-backend2.onrender.com/api/offramp/${address}`;
         const offrampResponse = await fetch(offrampUrl);
         const offrampData = offrampResponse.ok
           ? await offrampResponse.json().catch(() => [])
           : [];
-        console.log("offrampData", offrampData);
+        // console.log("offrampData", offrampData);
         // Transform onramp data
         const onrampTransactions: Transaction[] = Array.isArray(onrampData)
           ? onrampData[0].map((tx: any) => ({
@@ -118,7 +118,7 @@ export default function History() {
               token: tx.payout_network,
             }))
           : [];
-        console.log("onrampTransactions", onrampTransactions);
+        // console.log("onrampTransactions", onrampTransactions);
         // Transform offramp data
         const offrampTransactions: Transaction[] = Array.isArray(offrampData)
           ? offrampData.map((tx: any) => ({
@@ -134,13 +134,13 @@ export default function History() {
               token: tx.token,
             }))
           : [];
-            console.log("offrampTransactions", offrampTransactions);
+            // console.log("offrampTransactions", offrampTransactions);
         // Combine and sort by timestamp (newest first)
         const allTransactions = [...onrampTransactions, ...offrampTransactions]
           .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 
         setTransactions(allTransactions);
-        console.log(allTransactions);
+        // console.log(allTransactions);
       } catch (err) {
         console.error('Error fetching transactions:', err);
         setError('Failed to load transaction history');

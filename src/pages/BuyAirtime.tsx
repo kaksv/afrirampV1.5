@@ -46,7 +46,7 @@ export default function BuyAirtime() {
 
   const { address } = useAccount();
   const chainId = useChainId();
-  console.log(chainId);
+  // console.log(chainId);
   
   
   // Form State
@@ -105,7 +105,7 @@ export default function BuyAirtime() {
       }
     })
     .catch((err) => setError(err.message))
-    .finally(() => console.log("Exchange rate fetched"));
+    .finally(() => { /* console.log("Exchange rate fetched"); */ });
   }, [fiatCurrency]);
 
   
@@ -265,7 +265,7 @@ export default function BuyAirtime() {
             );
           }
 
-          console.log('Backend response:', responseData);
+          // console.log('Backend response:', responseData);
           if (responseData?.id) {
             setCurrentTx(responseData);
             setCurrentTxId(responseData.id);

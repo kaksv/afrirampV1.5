@@ -63,7 +63,7 @@ export default function OffRamp() {
   const { address } = useAccount();
   const chainId = useChainId();
   const { sendTransactionAsync } = useSendTransaction();
-  console.log(chainId);
+  // console.log(chainId);
 // Define which tokens (including native) are supported per chain
 const TOKEN_CONFIG: Record<number, TokenSymbol[]> = {
   1:      [ 'USDC', 'USDT', 'ETH'],     // Ethereum
@@ -241,7 +241,7 @@ useEffect(() => {
       }
     })
     .catch((err) => setError(err instanceof Error ? err.message : String(err)))
-    .finally(() => console.log("Exchange rate fetched"));
+    .finally(() => { /* console.log("Exchange rate fetched"); */ });
   }, [fiatCurrency]);
 
   
@@ -268,7 +268,7 @@ useEffect(() => {
         }),
       });
 
-      console.log(response);
+      // console.log(response);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -276,7 +276,7 @@ useEffect(() => {
       }
 
       const responseData = await response.json();
-      console.log('Backend response:', responseData);
+      // console.log('Backend response:', responseData);
       setIsSuccess(true);
     } catch (error) {
       console.error('Full error details:', {
