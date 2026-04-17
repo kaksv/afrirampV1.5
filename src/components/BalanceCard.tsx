@@ -252,7 +252,7 @@ export default function BalanceCard() {
               </motion.div>
               <span className="text-sm font-medium">Sell Stable Coins</span>
             </Link>
-            {/* <Link 
+            <Link 
               to="/buyairtime" 
               className="flex flex-col items-center p-3 rounded-lg border border-slate-200 dark:border-dark-600 hover:bg-slate-50 dark:hover:bg-dark-600 transition-colors"
             >
@@ -263,8 +263,8 @@ export default function BalanceCard() {
                 <span className="text-lg">📱</span>
               </motion.div>
               <span className="text-sm font-medium">Airtime</span>
-            </Link> */}
-                        <Link 
+            </Link>
+            <Link 
               to="/buyairtime" 
               className="flex flex-col items-center p-3 rounded-lg border border-slate-200 dark:border-dark-600 hover:bg-slate-50 dark:hover:bg-dark-600 transition-colors"
             >
