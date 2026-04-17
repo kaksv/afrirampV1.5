@@ -275,7 +275,7 @@ useEffect(() => {
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
 
-      const responseData = await response.json();
+      // const responseData = await response.json();
       // console.log('Backend response:', responseData);
       setIsSuccess(true);
     } catch (error) {
